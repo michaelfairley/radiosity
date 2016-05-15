@@ -4,8 +4,11 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #define fail { printf("FAIL %d\n", __LINE__); return 1; }
+
+#define ARRAY_LENGTH(x) (sizeof(x) / sizeof(x[0]))
 
 void tick();
 GLuint createShader(const char* name, GLenum shaderType);
@@ -21,6 +24,42 @@ GLuint gouraudProgram;
 
 #define POSITION_ATTRIB 0
 #define NORMAL_ATTRIB 1
+
+struct Color {
+  float r;
+  float g;
+  float b;
+};
+
+struct Material {
+  Color color;
+};
+
+struct Vertex {
+  glm::vec3 position;
+  glm::vec3 normal;
+};
+
+struct Quad {
+  Vertex vertices[4];
+};
+
+
+Quad quads[] = {
+  {{
+      { glm::vec3(0.0f, 0.0f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f) },
+      { glm::vec3(1.0f, 0.0f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f) },
+      { glm::vec3(1.0f, 1.0f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f) },
+      { glm::vec3(0.0f, 1.0f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f) }
+    }},
+  {{
+      { glm::vec3(1.0f, 1.0f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f) },
+      { glm::vec3(1.0f, 0.0f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f) },
+      { glm::vec3(1.0f, 0.0f, 0.5f), glm::vec3(-1.0f, 0.0f, 0.0f) },
+      { glm::vec3(1.0f, 1.0f, 0.5f), glm::vec3(-1.0f, 0.0f, 0.0f) }
+    }}
+};
+
 
 int main(int argc, char** argv) {
 
@@ -48,19 +87,25 @@ int main(int argc, char** argv) {
     glBindAttribLocation(gouraudProgram, NORMAL_ATTRIB, "normal");
 
     glLinkProgram(gouraudProgram);
+
+    glDeleteShader(gouraudVert);
+    glDeleteShader(gouraudFrag);
   }
 
 
-  float vertices[] = {
-    0.0f,  0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f
-  };
+  {
+    GLint projLoc = glGetUniformLocation(gouraudProgram, "proj");
+    glm::mat4 ident = glm::mat4();
+    glm::mat4 proj = glm::perspective(60.0f, 640.0f/480.0f, 0.1f, 100.0f);
+    glUseProgram(gouraudProgram);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+    glUseProgram(0);
+  }
 
   {
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quads), quads, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
   }
 
@@ -71,11 +116,11 @@ int main(int argc, char** argv) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     glEnableVertexAttribArray(POSITION_ATTRIB);
-    glVertexAttribPointer(POSITION_ATTRIB, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    /*
+    glVertexAttribPointer(POSITION_ATTRIB, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+
     glEnableVertexAttribArray(NORMAL_ATTRIB);
-    glVertexAttribPointer(NORMAL_ATTRIB, 3, GL_FLOAT, GL_FALSE, 6, 3);
-    */
+    glVertexAttribPointer(NORMAL_ATTRIB, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (3 * sizeof(float)));
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
   }
@@ -111,10 +156,6 @@ void tick() {
   {
     glm::mat4 ident = glm::mat4();
     {
-      GLint projLoc = glGetUniformLocation(gouraudProgram, "proj");
-      glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(ident));
-    }
-    {
       GLint cameraLoc = glGetUniformLocation(gouraudProgram, "camera");
       glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(ident));
     }
@@ -134,7 +175,9 @@ void tick() {
   }
 
   glBindVertexArray(vao);
-  glDrawArrays(GL_TRIANGLES, 0, 3);
+  for (int i = 0; i < ARRAY_LENGTH(quads); i++) {
+    glDrawArrays(GL_TRIANGLE_FAN, i * 4, 4);
+  }
   glBindVertexArray(0);
 
   glUseProgram(0);
