@@ -160,11 +160,6 @@ void tick() {
       glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(ident));
     }
     {
-      GLint modelLoc = glGetUniformLocation(gouraudProgram, "model");
-      glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ident));
-    }
-
-    {
       GLint colorLoc = glGetUniformLocation(gouraudProgram, "color");
       glUniform3f(colorLoc, 1.0f, 1.0f, 1.0f);
     }
