@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
   window = SDL_CreateWindow("Test", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_OPENGL);
   if (!window) fail;
 
-  SDL_GLContext context = SDL_GL_CreateContext(window);
+  SDL_GL_CreateContext(window);
   SDL_GL_SetSwapInterval(1);
 
 
@@ -198,7 +198,6 @@ void tick() {
   glUseProgram(directProgram);
 
   {
-    glm::mat4 ident = glm::mat4();
     {
       glm::mat4 cameraReorient = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f),
                                              glm::vec3(0.0f, 1.0f, 0.0f),
