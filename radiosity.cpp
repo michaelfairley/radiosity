@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
   if (!window) fail;
 
   SDL_GLContext context = SDL_GL_CreateContext(window);
+  SDL_GL_SetSwapInterval(1);
 
 
   GLuint directVert = createShader("shaders/direct.vert.glsl", GL_VERTEX_SHADER);
@@ -133,7 +134,10 @@ int main(int argc, char** argv) {
     glBindVertexArray(0);
   }
 
-  while (!quit) tick();
+  while (!quit) {
+    tick();
+
+  }
 
   return 0;
 }
