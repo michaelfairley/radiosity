@@ -47,30 +47,43 @@ struct Vertex {
 };
 
 struct Quad {
-  Vertex vertices[4];
+  Vertex vertices[6];
 };
+
+Quad makeQuad(glm::vec3 a,
+              glm::vec3 b,
+              glm::vec3 c,
+              glm::vec3 d,
+              glm::vec3 normal) {
+  Quad quad =  {{
+      { a, normal },
+      { b, normal },
+      { c, normal },
+      { a, normal },
+      { c, normal },
+      { d, normal }
+    }};
+
+  return quad;
+}
 
 Quad quads[] = {
-  {{
-      { glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f) },
-      { glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f) },
-      { glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f) },
-      { glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f) }
-    }},
-  {{
-      { glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
-      { glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
-      { glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
-      { glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f) }
-    }},
-  {{
-      { glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f) },
-      { glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f) },
-      { glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f) },
-      { glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f) }
-      }}
+  makeQuad(glm::vec3(0.0f, 1.0f, 1.0f),
+           glm::vec3(1.0f, 1.0f, 1.0f),
+           glm::vec3(1.0f, 1.0f, 0.0f),
+           glm::vec3(0.0f, 1.0f, 0.0f),
+           glm::vec3(0.0f, 0.0f, -1.0f)),
+  makeQuad(glm::vec3(1.0f, 1.0f, 1.0f),
+           glm::vec3(1.0f, 0.0f, 1.0f),
+           glm::vec3(1.0f, 0.0f, 0.0f),
+           glm::vec3(1.0f, 1.0f, 0.0f),
+           glm::vec3(-1.0f, 0.0f, 0.0f)),
+  makeQuad(glm::vec3(0.0f, 0.0f, 1.0f),
+           glm::vec3(0.0f, 1.0f, 1.0f),
+           glm::vec3(0.0f, 1.0f, 0.0f),
+           glm::vec3(0.0f, 0.0f, 0.0f),
+           glm::vec3(1.0f, 0.0f, 0.0f))
 };
-
 
 int main(int argc, char** argv) {
 
@@ -222,9 +235,7 @@ void tick() {
   }
 
   glBindVertexArray(vao);
-  for (int i = 0; i < ARRAY_LENGTH(quads); i++) {
-    glDrawArrays(GL_TRIANGLE_FAN, i * 4, 4);
-  }
+  glDrawArrays(GL_TRIANGLES, 0, ARRAY_LENGTH(quads)*6);
   glBindVertexArray(0);
 
   glUseProgram(0);
