@@ -139,6 +139,11 @@ int main(int argc, char** argv) {
     glBindVertexArray(0);
   }
 
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
+  glDepthFunc(GL_LEQUAL);
+  glDepthRange(0.0f, 1.0f);
+
   while (!quit) {
     tick();
 
@@ -182,7 +187,7 @@ void tick() {
   }
 
   glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glUseProgram(directProgram);
 
