@@ -20,7 +20,7 @@ SDL_Window* window;
 
 GLuint vbo;
 GLuint vao;
-GLuint gouraudProgram;
+GLuint directProgram;
 
 #define POSITION_ATTRIB 0
 #define NORMAL_ATTRIB 1
@@ -75,36 +75,36 @@ int main(int argc, char** argv) {
   SDL_GLContext context = SDL_GL_CreateContext(window);
 
 
-  GLuint gouraudVert = createShader("shaders/gouraud.vert.glsl", GL_VERTEX_SHADER);
-  GLuint gouraudFrag = createShader("shaders/gouraud.frag.glsl", GL_FRAGMENT_SHADER);
+  GLuint directVert = createShader("shaders/direct.vert.glsl", GL_VERTEX_SHADER);
+  GLuint directFrag = createShader("shaders/direct.frag.glsl", GL_FRAGMENT_SHADER);
 
-  gouraudProgram = glCreateProgram();
+  directProgram = glCreateProgram();
   {
-    glAttachShader(gouraudProgram, gouraudVert);
-    glAttachShader(gouraudProgram, gouraudFrag);
+    glAttachShader(directProgram, directVert);
+    glAttachShader(directProgram, directFrag);
 
-    glBindAttribLocation(gouraudProgram, POSITION_ATTRIB, "position");
-    glBindAttribLocation(gouraudProgram, NORMAL_ATTRIB, "normal");
+    glBindAttribLocation(directProgram, POSITION_ATTRIB, "position");
+    glBindAttribLocation(directProgram, NORMAL_ATTRIB, "normal");
 
-    glLinkProgram(gouraudProgram);
+    glLinkProgram(directProgram);
 
-    glDeleteShader(gouraudVert);
-    glDeleteShader(gouraudFrag);
+    glDeleteShader(directVert);
+    glDeleteShader(directFrag);
   }
 
-  glUseProgram(gouraudProgram);
+  glUseProgram(directProgram);
   {
-    GLint projLoc = glGetUniformLocation(gouraudProgram, "proj");
+    GLint projLoc = glGetUniformLocation(directProgram, "proj");
     glm::mat4 proj = glm::perspective(60.0f, 640.0f/480.0f, 0.1f, 100.0f);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
   }
   {
-    GLint directionalDirLoc = glGetUniformLocation(gouraudProgram, "directional_dir");
+    GLint directionalDirLoc = glGetUniformLocation(directProgram, "directional_dir");
     glm::vec3 light_dir = glm::normalize(glm::vec3(-0.2f, -1.0f, -1.0f));
     glUniform3fv(directionalDirLoc, 1, glm::value_ptr(light_dir));
   }
   {
-    GLint directionalIntensityLoc = glGetUniformLocation(gouraudProgram, "directional_intensity");
+    GLint directionalIntensityLoc = glGetUniformLocation(directProgram, "directional_intensity");
     glUniform1f(directionalIntensityLoc, 0.1f);
   }
   glUseProgram(0);
@@ -159,16 +159,16 @@ void tick() {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  glUseProgram(gouraudProgram);
+  glUseProgram(directProgram);
 
   {
     glm::mat4 ident = glm::mat4();
     {
-      GLint cameraLoc = glGetUniformLocation(gouraudProgram, "camera");
+      GLint cameraLoc = glGetUniformLocation(directProgram, "camera");
       glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(ident));
     }
     {
-      GLint colorLoc = glGetUniformLocation(gouraudProgram, "color");
+      GLint colorLoc = glGetUniformLocation(directProgram, "color");
       glUniform3f(colorLoc, 1.0f, 1.0f, 1.0f);
     }
   }
