@@ -16,7 +16,7 @@ GLuint createShader(const char* name, GLenum shaderType);
 
 bool quit = false;
 
-glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 0.8f);
+glm::vec3 cameraPosition = glm::vec3(0.5f, 0.0f, 0.8f);
 float cameraRotateZ = 0.0f;
 
 #define MOVE_SPEED 0.02f
@@ -62,6 +62,12 @@ Quad quads[] = {
       { glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
       { glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
       { glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f) }
+    }},
+  {{
+      { glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f) },
+      { glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f) },
+      { glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f) },
+      { glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f) }
       }}
 };
 
