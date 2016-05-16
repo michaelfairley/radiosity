@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 #define fail { printf("FAIL %d\n", __LINE__); return 1; }
 
@@ -15,6 +16,11 @@ GLuint createShader(const char* name, GLenum shaderType);
 
 bool quit = false;
 
+glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 0.8f);
+float cameraRotateZ = 0.0f;
+
+#define MOVE_SPEED 0.02f
+#define ROTATE_SPEED 0.02f
 
 SDL_Window* window;
 
@@ -46,16 +52,16 @@ struct Quad {
 
 Quad quads[] = {
   {{
-      { glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f) },
-      { glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f) },
-      { glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f) },
-      { glm::vec3(0.0f, -1.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f) }
+      { glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f) },
+      { glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f) },
+      { glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f) },
+      { glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f) }
     }},
   {{
-      { glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
+      { glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
       { glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
       { glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
-      { glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(-1.0f, 0.0f, 0.0f) }
+      { glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-1.0f, 0.0f, 0.0f) }
       }}
 };
 
@@ -95,13 +101,13 @@ int main(int argc, char** argv) {
   glUseProgram(directProgram);
   {
     GLint projLoc = glGetUniformLocation(directProgram, "proj");
-    glm::mat4 proj = glm::perspective(80.0f, 640.0f/480.0f, 0.1f, 100.0f);
+    glm::mat4 proj = glm::perspective(45.0f, 640.0f/480.0f, 0.1f, 100.0f);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
   }
   {
     GLint directionalDirLoc = glGetUniformLocation(directProgram, "directional_dir");
-    glm::vec3 light_dir = glm::normalize(glm::vec3(-0.2f, -1.0f, -1.0f));
-    glUniform3fv(directionalDirLoc, 1, glm::value_ptr(light_dir));
+    glm::vec3 lightDir = glm::normalize(glm::vec3(0.2f, -1.0f, -1.0f));
+    glUniform3fv(directionalDirLoc, 1, glm::value_ptr(lightDir));
   }
   {
     GLint directionalIntensityLoc = glGetUniformLocation(directProgram, "directional_intensity");
@@ -159,6 +165,22 @@ void tick() {
     }
   }
 
+  {
+    const Uint8 *keys = SDL_GetKeyboardState(NULL);
+    if (keys[SDL_SCANCODE_UP]) {
+      cameraPosition += glm::rotateZ(glm::vec3(0.0f, MOVE_SPEED, 0.0f), -cameraRotateZ);
+    }
+    if (keys[SDL_SCANCODE_DOWN]) {
+      cameraPosition -= glm::rotateZ(glm::vec3(0.0f, MOVE_SPEED, 0.0f), -cameraRotateZ);
+    }
+    if (keys[SDL_SCANCODE_RIGHT]) {
+      cameraRotateZ += ROTATE_SPEED;
+    }
+    if (keys[SDL_SCANCODE_LEFT]) {
+      cameraRotateZ -= ROTATE_SPEED;
+    }
+  }
+
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
@@ -168,10 +190,13 @@ void tick() {
     glm::mat4 ident = glm::mat4();
     {
       glm::mat4 cameraReorient = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f),
-                                             glm::vec3(0.0f, -1.0f, 0.0f),
-                                             glm::vec3(0.0f, 0.0f, -1.0f));
+                                             glm::vec3(0.0f, 1.0f, 0.0f),
+                                             glm::vec3(0.0f, 0.0f, 1.0f));
+      glm::mat4 cameraRotated = glm::rotate(cameraReorient, cameraRotateZ, glm::vec3(0.0f, 0.0f, 1.0f));
+      glm::mat4 camera = glm::translate(cameraRotated, -cameraPosition);
+
       GLint cameraLoc = glGetUniformLocation(directProgram, "camera");
-      glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(cameraReorient));
+      glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(camera));
     }
     {
       GLint colorLoc = glGetUniformLocation(directProgram, "color");
