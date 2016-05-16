@@ -44,20 +44,19 @@ struct Quad {
   Vertex vertices[4];
 };
 
-
 Quad quads[] = {
   {{
-      { glm::vec3(0.0f, 0.0f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f) },
-      { glm::vec3(1.0f, 0.0f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f) },
-      { glm::vec3(1.0f, 1.0f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f) },
-      { glm::vec3(0.0f, 1.0f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f) }
+      { glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f) },
+      { glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f) },
+      { glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f) },
+      { glm::vec3(0.0f, -1.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f) }
     }},
   {{
-      { glm::vec3(1.0f, 1.0f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f) },
-      { glm::vec3(1.0f, 0.0f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f) },
-      { glm::vec3(1.0f, 0.0f, 0.5f), glm::vec3(-1.0f, 0.0f, 0.0f) },
-      { glm::vec3(1.0f, 1.0f, 0.5f), glm::vec3(-1.0f, 0.0f, 0.0f) }
-    }}
+      { glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
+      { glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
+      { glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(-1.0f, 0.0f, 0.0f) },
+      { glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(-1.0f, 0.0f, 0.0f) }
+      }}
 };
 
 
@@ -96,7 +95,7 @@ int main(int argc, char** argv) {
   glUseProgram(directProgram);
   {
     GLint projLoc = glGetUniformLocation(directProgram, "proj");
-    glm::mat4 proj = glm::perspective(60.0f, 640.0f/480.0f, 0.1f, 100.0f);
+    glm::mat4 proj = glm::perspective(80.0f, 640.0f/480.0f, 0.1f, 100.0f);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
   }
   {
@@ -168,8 +167,11 @@ void tick() {
   {
     glm::mat4 ident = glm::mat4();
     {
+      glm::mat4 cameraReorient = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f),
+                                             glm::vec3(0.0f, -1.0f, 0.0f),
+                                             glm::vec3(0.0f, 0.0f, -1.0f));
       GLint cameraLoc = glGetUniformLocation(directProgram, "camera");
-      glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(ident));
+      glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(cameraReorient));
     }
     {
       GLint colorLoc = glGetUniformLocation(directProgram, "color");
