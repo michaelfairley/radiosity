@@ -92,15 +92,23 @@ int main(int argc, char** argv) {
     glDeleteShader(gouraudFrag);
   }
 
-
+  glUseProgram(gouraudProgram);
   {
     GLint projLoc = glGetUniformLocation(gouraudProgram, "proj");
-    glm::mat4 ident = glm::mat4();
     glm::mat4 proj = glm::perspective(60.0f, 640.0f/480.0f, 0.1f, 100.0f);
-    glUseProgram(gouraudProgram);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-    glUseProgram(0);
   }
+  {
+    GLint directionalDirLoc = glGetUniformLocation(gouraudProgram, "directional_dir");
+    glm::vec3 light_dir = glm::normalize(glm::vec3(-0.2f, -1.0f, -1.0f));
+    glUniform3fv(directionalDirLoc, 1, glm::value_ptr(light_dir));
+  }
+  {
+    GLint directionalIntensityLoc = glGetUniformLocation(gouraudProgram, "directional_intensity");
+    glUniform1f(directionalIntensityLoc, 0.1f);
+  }
+  glUseProgram(0);
+
 
   {
     glGenBuffers(1, &vbo);
@@ -162,10 +170,6 @@ void tick() {
     {
       GLint colorLoc = glGetUniformLocation(gouraudProgram, "color");
       glUniform3f(colorLoc, 1.0f, 1.0f, 1.0f);
-    }
-    {
-      GLint directionalIntensityLoc = glGetUniformLocation(gouraudProgram, "directional_intensity");
-      glUniform1f(directionalIntensityLoc, 0.0f);
     }
   }
 
