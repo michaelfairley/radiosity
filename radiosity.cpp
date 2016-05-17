@@ -30,6 +30,7 @@ GLuint directProgram;
 
 #define POSITION_ATTRIB 0
 #define NORMAL_ATTRIB 1
+#define COLOR_ATTRIB 2
 
 struct Color {
   float r;
@@ -44,6 +45,7 @@ struct Material {
 struct Vertex {
   glm::vec3 position;
   glm::vec3 normal;
+  Color color;
 };
 
 struct Quad {
@@ -54,35 +56,42 @@ Quad makeQuad(glm::vec3 a,
               glm::vec3 b,
               glm::vec3 c,
               glm::vec3 d,
-              glm::vec3 normal) {
+              glm::vec3 normal,
+              Color color) {
   Quad quad =  {{
-      { a, normal },
-      { b, normal },
-      { c, normal },
-      { a, normal },
-      { c, normal },
-      { d, normal }
+      { a, normal, color },
+      { b, normal, color },
+      { c, normal, color },
+      { a, normal, color },
+      { c, normal, color },
+      { d, normal, color }
     }};
 
   return quad;
 }
+
+const Color WHITE = {1.0f, 1.0f, 1.0f};
+const Color RED = {1.0f, 0.0f, 0.0f};
 
 Quad quads[] = {
   makeQuad(glm::vec3(0.0f, 1.0f, 1.0f),
            glm::vec3(1.0f, 1.0f, 1.0f),
            glm::vec3(1.0f, 1.0f, 0.0f),
            glm::vec3(0.0f, 1.0f, 0.0f),
-           glm::vec3(0.0f, 0.0f, -1.0f)),
+           glm::vec3(0.0f, 0.0f, -1.0f),
+           WHITE),
   makeQuad(glm::vec3(1.0f, 1.0f, 1.0f),
            glm::vec3(1.0f, 0.0f, 1.0f),
            glm::vec3(1.0f, 0.0f, 0.0f),
            glm::vec3(1.0f, 1.0f, 0.0f),
-           glm::vec3(-1.0f, 0.0f, 0.0f)),
+           glm::vec3(-1.0f, 0.0f, 0.0f),
+           WHITE),
   makeQuad(glm::vec3(0.0f, 0.0f, 1.0f),
            glm::vec3(0.0f, 1.0f, 1.0f),
            glm::vec3(0.0f, 1.0f, 0.0f),
            glm::vec3(0.0f, 0.0f, 0.0f),
-           glm::vec3(1.0f, 0.0f, 0.0f))
+           glm::vec3(1.0f, 0.0f, 0.0f),
+           RED)
 };
 
 int main(int argc, char** argv) {
@@ -112,6 +121,7 @@ int main(int argc, char** argv) {
 
     glBindAttribLocation(directProgram, POSITION_ATTRIB, "position");
     glBindAttribLocation(directProgram, NORMAL_ATTRIB, "normal");
+    glBindAttribLocation(directProgram, COLOR_ATTRIB, "color");
 
     glLinkProgram(directProgram);
 
@@ -155,6 +165,9 @@ int main(int argc, char** argv) {
 
     glEnableVertexAttribArray(NORMAL_ATTRIB);
     glVertexAttribPointer(NORMAL_ATTRIB, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (3 * sizeof(float)));
+
+    glEnableVertexAttribArray(COLOR_ATTRIB);
+    glVertexAttribPointer(COLOR_ATTRIB, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (6 * sizeof(float)));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -227,10 +240,6 @@ void tick() {
 
       GLint cameraLoc = glGetUniformLocation(directProgram, "camera");
       glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(camera));
-    }
-    {
-      GLint colorLoc = glGetUniformLocation(directProgram, "color");
-      glUniform3f(colorLoc, 1.0f, 1.0f, 1.0f);
     }
   }
 
