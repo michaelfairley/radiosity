@@ -16,10 +16,10 @@ GLuint createShader(const char* name, GLenum shaderType);
 
 bool quit = false;
 
-glm::vec3 cameraPosition = glm::vec3(0.5f, 0.0f, 0.8f);
+glm::vec3 cameraPosition = glm::vec3(0.5f, 0.0f, 3.5f);
 float cameraRotateZ = 0.0f;
 
-#define MOVE_SPEED 0.02f
+#define MOVE_SPEED 0.1f
 #define ROTATE_SPEED 0.02f
 
 SDL_Window* window;
@@ -71,27 +71,33 @@ Quad makeQuad(glm::vec3 a,
 }
 
 const Color WHITE = {1.0f, 1.0f, 1.0f};
-const Color RED = {1.0f, 0.0f, 0.0f};
+// const Color RED = {1.0f, 0.0f, 0.0f};
 
 Quad quads[] = {
-  makeQuad(glm::vec3(0.0f, 1.0f, 1.0f),
-           glm::vec3(1.0f, 1.0f, 1.0f),
-           glm::vec3(1.0f, 1.0f, 0.0f),
+  makeQuad(glm::vec3(10.0f, 17.0f, 5.0f),
+           glm::vec3(9.0f, 17.0f, 5.0f),
+           glm::vec3(9.0f, 17.0f, 0.0f),
+           glm::vec3(10.0f, 17.0f, 0.0f),
            glm::vec3(0.0f, 1.0f, 0.0f),
-           glm::vec3(0.0f, 0.0f, -1.0f),
            WHITE),
-  makeQuad(glm::vec3(1.0f, 1.0f, 1.0f),
-           glm::vec3(1.0f, 0.0f, 1.0f),
-           glm::vec3(1.0f, 0.0f, 0.0f),
-           glm::vec3(1.0f, 1.0f, 0.0f),
+  makeQuad(glm::vec3(9.0f, 16.0f, 5.0f),
+           glm::vec3(10.0f, 16.0f, 5.0f),
+           glm::vec3(10.0f, 16.0f, 0.0f),
+           glm::vec3(9.0f, 16.0f, 0.0f),
+           glm::vec3(0.0f, -1.0f, 0.0f),
+           WHITE),
+  makeQuad(glm::vec3(9.0f, 17.0f, 5.0f),
+           glm::vec3(9.0f, 16.0f, 5.0f),
+           glm::vec3(9.0f, 16.0f, 0.0f),
+           glm::vec3(9.0f, 17.0f, 0.0f),
            glm::vec3(-1.0f, 0.0f, 0.0f),
            WHITE),
-  makeQuad(glm::vec3(0.0f, 0.0f, 1.0f),
-           glm::vec3(0.0f, 1.0f, 1.0f),
-           glm::vec3(0.0f, 1.0f, 0.0f),
-           glm::vec3(0.0f, 0.0f, 0.0f),
+  makeQuad(glm::vec3(10.0f, 16.0f, 5.0f),
+           glm::vec3(10.0f, 17.0f, 5.0f),
+           glm::vec3(10.0f, 17.0f, 0.0f),
+           glm::vec3(10.0f, 16.0f, 0.0f),
            glm::vec3(1.0f, 0.0f, 0.0f),
-           RED)
+           WHITE)
 };
 
 int main(int argc, char** argv) {
