@@ -96,8 +96,34 @@ Quad makeWall(float x, float y, float z,
                   color);
 }
 
+Quad makeFloor(float x, float y,
+               float dx, float dy,
+               Color color) {
+  assert(dx != 0 && dy != 0);
+
+  return makeQuad(glm::vec3(x, y, 0.0f),
+                  glm::vec3(x, y + dy, 0.0f),
+                  glm::vec3(x + dx, y + dy, 0.0f),
+                  glm::vec3(x + dx, y, 0.0f),
+                  glm::vec3(0.0f, 0.0f, 1.0f),
+                  color);
+}
+
+Quad makeCeiling(float x, float y,
+                 float dx, float dy,
+                 Color color) {
+  assert(dx != 0 && dy != 0);
+
+  return makeQuad(glm::vec3(x, y, 5.0f),
+                  glm::vec3(x + dx, y, 5.0f),
+                  glm::vec3(x + dx, y + dy, 5.0f),
+                  glm::vec3(x, y + dy, 5.0f),
+                  glm::vec3(0.0f, 0.0f, -1.0f),
+                  color);
+}
+
 const Color WHITE = {1.0f, 1.0f, 1.0f};
-// const Color RED = {1.0f, 0.0f, 0.0f};
+const Color RED = {1.0f, 0.0f, 0.0f};
 
 Quad quads[] = {
   // Left column
@@ -203,7 +229,78 @@ Quad quads[] = {
            WHITE),
   makeWall(20.0f, 19.0f, 0.0f,
            0.0f, 3.0f, 5.0f,
-           WHITE)
+           WHITE),
+
+  // Floor
+  makeFloor(5.0f, 11.0f,
+            3.0f, 3.0f,
+            RED),
+  makeFloor(8.0f, 11.5f,
+            3.0f, 2.5f,
+            RED),
+  makeFloor(11.0f, 11.0f,
+            3.0f, 3.0f,
+            RED),
+  makeFloor(14.0f, 11.5f,
+            3.0f, 2.5f,
+            RED),
+  makeFloor(17.0f, 11.0f,
+            3.0f, 3.0f,
+            RED),
+  makeFloor(6.0f, 14.0f,
+            13.0f, 2.0f,
+            RED),
+  makeFloor(6.0f, 16.0f,
+            3.0f, 1.0f,
+            RED),
+  makeFloor(10.0f, 16.0f,
+            5.0f, 1.0f,
+            RED),
+  makeFloor(16.0f, 16.0f,
+            3.0f, 1.0f,
+            RED),
+  makeFloor(6.0f, 17.0f,
+            13.0f, 2.0f,
+            RED),
+  makeFloor(5.0f, 19.0f,
+            15.0f, 3.0f,
+            RED),
+
+  // Ceiling
+  makeCeiling(5.0f, 11.0f,
+            3.0f, 3.0f,
+            WHITE),
+  makeCeiling(8.0f, 11.5f,
+            3.0f, 2.5f,
+            WHITE),
+  makeCeiling(11.0f, 11.0f,
+            3.0f, 3.0f,
+            WHITE),
+  makeCeiling(14.0f, 11.5f,
+            3.0f, 2.5f,
+            WHITE),
+  makeCeiling(17.0f, 11.0f,
+            3.0f, 3.0f,
+            WHITE),
+  makeCeiling(6.0f, 14.0f,
+            13.0f, 2.0f,
+            WHITE),
+  makeCeiling(6.0f, 16.0f,
+            3.0f, 1.0f,
+            WHITE),
+  makeCeiling(10.0f, 16.0f,
+            5.0f, 1.0f,
+            WHITE),
+  makeCeiling(16.0f, 16.0f,
+            3.0f, 1.0f,
+            WHITE),
+  makeCeiling(6.0f, 17.0f,
+            13.0f, 2.0f,
+            WHITE),
+  makeCeiling(5.0f, 19.0f,
+            15.0f, 3.0f,
+            WHITE)
+
 };
 
 int main(int argc, char** argv) {
