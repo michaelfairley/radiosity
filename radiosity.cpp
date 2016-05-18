@@ -249,7 +249,7 @@ int main(int argc, char** argv) {
   }
   {
     GLint directionalDirLoc = glGetUniformLocation(directProgram, "directional_dir");
-    glm::vec3 lightDir = glm::normalize(glm::vec3(0.2f, -1.0f, -1.0f));
+    glm::vec3 lightDir = glm::normalize(glm::vec3(0.2f, 1.0f, -1.0f));
     glUniform3fv(directionalDirLoc, 1, glm::value_ptr(lightDir));
   }
   {
