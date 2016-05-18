@@ -122,8 +122,8 @@ Quad makeCeiling(float x, float y,
                   color);
 }
 
-const Color WHITE = {1.0f, 1.0f, 1.0f};
-const Color RED = {1.0f, 0.0f, 0.0f};
+const Color WHITE = {0.9f, 0.9f, 0.9f};
+const Color RED = {0.8f, 0.0f, 0.0f};
 
 Quad quads[] = {
   // Left column
@@ -351,7 +351,7 @@ int main(int argc, char** argv) {
   }
   {
     GLint directionalIntensityLoc = glGetUniformLocation(directProgram, "directional_intensity");
-    glUniform1f(directionalIntensityLoc, 0.1f);
+    glUniform1f(directionalIntensityLoc, 0.2f);
   }
   glUseProgram(0);
 
