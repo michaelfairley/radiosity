@@ -16,8 +16,8 @@ GLuint createShader(const char* name, GLenum shaderType);
 
 bool quit = false;
 
-glm::vec3 cameraPosition = glm::vec3(0.5f, 0.0f, 3.5f);
-float cameraRotateZ = 0.0f;
+glm::vec3 cameraPosition = glm::vec3(10.0f, 20.0f, 3.5f);
+float cameraRotateZ = 2.75f;
 
 #define MOVE_SPEED 0.1f
 #define ROTATE_SPEED 0.02f
@@ -100,6 +100,7 @@ const Color WHITE = {1.0f, 1.0f, 1.0f};
 // const Color RED = {1.0f, 0.0f, 0.0f};
 
 Quad quads[] = {
+  // Left column
   makeWall(9.0f, 17.0f, 0.0f,
            1.0f, 0.0f, 5.0f,
            WHITE),
@@ -111,6 +112,97 @@ Quad quads[] = {
            WHITE),
   makeWall(10.0f, 17.0f, 0.0f,
            0.0f, -1.0f, 5.0f,
+           WHITE),
+
+  // Right column
+  makeWall(15.0f, 17.0f, 0.0f,
+           1.0f, 0.0f, 5.0f,
+           WHITE),
+  makeWall(16.0f, 16.0f, 0.0f,
+           -1.0f, 0.0f, 5.0f,
+           WHITE),
+  makeWall(15.0f, 16.0f, 0.0f,
+           0.0f, 1.0f, 5.0f,
+           WHITE),
+  makeWall(16.0f, 17.0f, 0.0f,
+           0.0f, -1.0f, 5.0f,
+           WHITE),
+
+  // Back wall
+  makeWall(20.0f, 22.0f, 0.0f,
+           -15.0f, 0.0f, 5.0f,
+           WHITE),
+
+  // Left Wall
+  makeWall(5.0f, 22.0f, 0.0f,
+           0.0f, -3.0f, 5.0f,
+           WHITE),
+  makeWall(5.0f, 19.0f, 0.0f,
+           1.0f, 0.0f, 5.0f,
+           WHITE),
+  makeWall(6.0f, 19.0f, 0.0f,
+           0.0f, -5.0f, 5.0f,
+           WHITE),
+  makeWall(6.0f, 14.0f, 0.0f,
+           -1.0f, 0.0f, 5.0f,
+           WHITE),
+  makeWall(5.0f, 14.0f, 0.0f,
+           0.0f, -3.0f, 5.0f,
+           WHITE),
+
+  // Front wall
+  makeWall(5.0f, 11.0f, 0.0f,
+           3.0f, 0.0f, 1.0f,
+           WHITE),
+  makeWall(5.0f, 11.0f, 4.0f,
+           3.0f, 0.0f, 1.0f,
+           WHITE),
+  makeWall(8.0f, 11.0f, 0.0f,
+           0.0f, 0.5f, 5.0f,
+           WHITE),
+  makeWall(8.0f, 11.5f, 0.0f,
+           3.0f, 0.0f, 5.0f,
+           WHITE),
+  makeWall(11.0f, 11.5f, 0.0f,
+           0.0f, -0.5f, 5.0f,
+           WHITE),
+  makeWall(11.0f, 11.0f, 0.0f,
+           3.0f, 0.0f, 1.0f,
+           WHITE),
+  makeWall(11.0f, 11.0f, 4.0f,
+           3.0f, 0.0f, 1.0f,
+           WHITE),
+  makeWall(14.0f, 11.0f, 0.0f,
+           0.0f, 0.5f, 5.0f,
+           WHITE),
+  makeWall(14.0f, 11.5f, 0.0f,
+           3.0f, 0.0f, 5.0f,
+           WHITE),
+  makeWall(17.0f, 11.5f, 0.0f,
+           0.0f, -0.5f, 5.0f,
+           WHITE),
+  makeWall(17.0f, 11.0f, 0.0f,
+           3.0f, 0.0f, 1.0f,
+           WHITE),
+  makeWall(17.0f, 11.0f, 4.0f,
+           3.0f, 0.0f, 1.0f,
+           WHITE),
+
+  // Right wall
+  makeWall(20.0f, 11.0f, 0.0f,
+           0.0f, 3.0f, 5.0f,
+           WHITE),
+  makeWall(20.0f, 14.0f, 0.0f,
+           -1.0f, 0.0f, 5.0f,
+           WHITE),
+  makeWall(19.0f, 14.0f, 0.0f,
+           0.0f, 5.0f, 5.0f,
+           WHITE),
+  makeWall(19.0f, 19.0f, 0.0f,
+           1.0f, 0.0f, 5.0f,
+           WHITE),
+  makeWall(20.0f, 19.0f, 0.0f,
+           0.0f, 3.0f, 5.0f,
            WHITE)
 };
 
