@@ -70,33 +70,47 @@ Quad makeQuad(glm::vec3 a,
   return quad;
 }
 
+Quad makeWall(float x, float y, float z,
+              float dx, float dy, float dz,
+              Color color) {
+  assert(dx == 0 || dy == 0);
+  assert(dx != 0 || dy != 0);
+  assert(dz > 0);
+
+  glm::vec3 normal;
+  if(dx > 0) {
+    normal = glm::vec3(0.0f, 1.0f, 0.0f);
+  } else if (dx < 0) {
+    normal = glm::vec3(0.0f, -1.0f, 0.0f);
+  } else if(dy > 0) {
+    normal = glm::vec3(-1.0f, 0.0f, 0.0f);
+  } else if (dy < 0) {
+    normal = glm::vec3(1.0f, 0.0f, 0.0f);
+  }
+
+  return makeQuad(glm::vec3(x, y, z),
+                  glm::vec3(x + dx, y + dy, z),
+                  glm::vec3(x + dx, y + dy, z + dz),
+                  glm::vec3(x, y, z + dz),
+                  normal,
+                  color);
+}
+
 const Color WHITE = {1.0f, 1.0f, 1.0f};
 // const Color RED = {1.0f, 0.0f, 0.0f};
 
 Quad quads[] = {
-  makeQuad(glm::vec3(10.0f, 17.0f, 5.0f),
-           glm::vec3(9.0f, 17.0f, 5.0f),
-           glm::vec3(9.0f, 17.0f, 0.0f),
-           glm::vec3(10.0f, 17.0f, 0.0f),
-           glm::vec3(0.0f, 1.0f, 0.0f),
+  makeWall(9.0f, 17.0f, 0.0f,
+           1.0f, 0.0f, 5.0f,
            WHITE),
-  makeQuad(glm::vec3(9.0f, 16.0f, 5.0f),
-           glm::vec3(10.0f, 16.0f, 5.0f),
-           glm::vec3(10.0f, 16.0f, 0.0f),
-           glm::vec3(9.0f, 16.0f, 0.0f),
-           glm::vec3(0.0f, -1.0f, 0.0f),
+  makeWall(10.0f, 16.0f, 0.0f,
+           -1.0f, 0.0f, 5.0f,
            WHITE),
-  makeQuad(glm::vec3(9.0f, 17.0f, 5.0f),
-           glm::vec3(9.0f, 16.0f, 5.0f),
-           glm::vec3(9.0f, 16.0f, 0.0f),
-           glm::vec3(9.0f, 17.0f, 0.0f),
-           glm::vec3(-1.0f, 0.0f, 0.0f),
+  makeWall(9.0f, 16.0f, 0.0f,
+           0.0f, 1.0f, 5.0f,
            WHITE),
-  makeQuad(glm::vec3(10.0f, 16.0f, 5.0f),
-           glm::vec3(10.0f, 17.0f, 5.0f),
-           glm::vec3(10.0f, 17.0f, 0.0f),
-           glm::vec3(10.0f, 16.0f, 0.0f),
-           glm::vec3(1.0f, 0.0f, 0.0f),
+  makeWall(10.0f, 17.0f, 0.0f,
+           0.0f, -1.0f, 5.0f,
            WHITE)
 };
 
