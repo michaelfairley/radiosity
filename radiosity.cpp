@@ -13,6 +13,7 @@
 
 void tick();
 GLuint createShader(const char* name, GLenum shaderType);
+void render(glm::mat4 camera);
 
 bool quit = false;
 
@@ -198,34 +199,36 @@ void tick() {
     }
   }
 
+  {
+    glm::mat4 cameraReorient = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f),
+                                           glm::vec3(0.0f, 1.0f, 0.0f),
+                                           glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::mat4 cameraRotated =
+      glm::rotate(glm::rotate(cameraReorient, cameraRotateUp, glm::vec3(1.0f, 0.0f, 0.0f)),
+                  cameraRotateZ, glm::vec3(0.0, 0.0, 1.0f));
+    glm::mat4 camera = glm::translate(cameraRotated, -cameraPosition);
+
+    render(camera);
+  }
+
+  SDL_GL_SwapWindow(window);
+}
+
+void render(glm::mat4 camera) {
   glClearColor(1.0, 1.0, 1.0, 1.0);
   glClearDepth(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glUseProgram(directProgram);
 
-  {
-    {
-      glm::mat4 cameraReorient = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f),
-                                             glm::vec3(0.0f, 1.0f, 0.0f),
-                                             glm::vec3(0.0f, 0.0f, 1.0f));
-      glm::mat4 cameraRotated =
-        glm::rotate(glm::rotate(cameraReorient, cameraRotateUp, glm::vec3(1.0f, 0.0f, 0.0f)),
-                    cameraRotateZ, glm::vec3(0.0, 0.0, 1.0f));
-      glm::mat4 camera = glm::translate(cameraRotated, -cameraPosition);
-
-      GLint cameraLoc = glGetUniformLocation(directProgram, "camera");
-      glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(camera));
-    }
-  }
+  GLint cameraLoc = glGetUniformLocation(directProgram, "camera");
+  glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(camera));
 
   glBindVertexArray(vao);
   glDrawArrays(GL_TRIANGLES, 0, ARRAY_LENGTH(quads)*6);
   glBindVertexArray(0);
 
   glUseProgram(0);
-
-  SDL_GL_SwapWindow(window);
 }
 
 GLuint createShader(const char* filename, GLenum shaderType) {
