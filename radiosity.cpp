@@ -191,10 +191,10 @@ void tick() {
       cameraPosition -= glm::rotateZ(glm::vec3(0.0f, MOVE_SPEED, 0.0f), -cameraRotateZ);
     }
     if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) {
-      cameraRotateZ += ROTATE_SPEED;
+      cameraPosition += glm::rotateZ(glm::vec3(MOVE_SPEED, 0.0f, 0.0f), -cameraRotateZ);
     }
     if (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A]) {
-      cameraRotateZ -= ROTATE_SPEED;
+      cameraPosition -= glm::rotateZ(glm::vec3(MOVE_SPEED, 0.0f, 0.0f), -cameraRotateZ);
     }
   }
 
