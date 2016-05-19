@@ -18,9 +18,10 @@ bool quit = false;
 
 glm::vec3 cameraPosition = glm::vec3(10.0f, 20.0f, 3.5f);
 float cameraRotateZ = 2.75f;
+float cameraRotateUp = 0.0f;
 
 #define MOVE_SPEED 0.1f
-#define ROTATE_SPEED 0.02f
+#define ROTATE_SPEED 0.01f
 
 SDL_Window* window;
 
@@ -72,6 +73,8 @@ int main(int argc, char** argv) {
 
   SDL_GL_CreateContext(window);
   SDL_GL_SetSwapInterval(1);
+
+  SDL_SetRelativeMouseMode(SDL_TRUE);
 
 
   GLuint directVert = createShader("shaders/direct.vert.glsl", GL_VERTEX_SHADER);
@@ -167,22 +170,30 @@ void tick() {
           quit = true;
         }
       } break;
+      case SDL_MOUSEMOTION: {
+        cameraRotateZ += event.motion.xrel * ROTATE_SPEED;
+        cameraRotateZ = fmodf(cameraRotateZ, M_PI * 2);
+
+        cameraRotateUp += event.motion.yrel * ROTATE_SPEED;
+        if (cameraRotateUp < -M_PI_2) cameraRotateUp = -M_PI_2;
+        if (cameraRotateUp > M_PI_2) cameraRotateUp = M_PI_2;
+      } break;
       }
     }
   }
 
   {
     const Uint8 *keys = SDL_GetKeyboardState(NULL);
-    if (keys[SDL_SCANCODE_UP]) {
+    if (keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W]) {
       cameraPosition += glm::rotateZ(glm::vec3(0.0f, MOVE_SPEED, 0.0f), -cameraRotateZ);
     }
-    if (keys[SDL_SCANCODE_DOWN]) {
+    if (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S]) {
       cameraPosition -= glm::rotateZ(glm::vec3(0.0f, MOVE_SPEED, 0.0f), -cameraRotateZ);
     }
-    if (keys[SDL_SCANCODE_RIGHT]) {
+    if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) {
       cameraRotateZ += ROTATE_SPEED;
     }
-    if (keys[SDL_SCANCODE_LEFT]) {
+    if (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A]) {
       cameraRotateZ -= ROTATE_SPEED;
     }
   }
@@ -198,7 +209,9 @@ void tick() {
       glm::mat4 cameraReorient = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f),
                                              glm::vec3(0.0f, 1.0f, 0.0f),
                                              glm::vec3(0.0f, 0.0f, 1.0f));
-      glm::mat4 cameraRotated = glm::rotate(cameraReorient, cameraRotateZ, glm::vec3(0.0f, 0.0f, 1.0f));
+      glm::mat4 cameraRotated =
+        glm::rotate(glm::rotate(cameraReorient, cameraRotateUp, glm::vec3(1.0f, 0.0f, 0.0f)),
+                    cameraRotateZ, glm::vec3(0.0, 0.0, 1.0f));
       glm::mat4 camera = glm::translate(cameraRotated, -cameraPosition);
 
       GLint cameraLoc = glGetUniformLocation(directProgram, "camera");
