@@ -1,1 +1,7 @@
-~~~radiosity~~~
+render hemicube at point
+multiplier map
+material properties
+HDR
+apply lightmaps
+iterate
+rect packing
