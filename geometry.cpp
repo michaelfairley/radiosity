@@ -66,37 +66,37 @@ Quad makeCeiling(float x, float y,
                   glm::vec3(x + dx, y + dy, 6.0f),
                   glm::vec3(x, y + dy, 6.0f),
                   glm::vec3(0.0f, 0.0f, -1.0f),
-                  color);
+                  BLUE);
 }
 
 Quad quads[] = {
   // Left column
   makeWall(9.0f, 17.0f, 0.0f,
            1.0f, 0.0f, 6.0f,
-           WHITE),
+           MAGENTA),
   makeWall(10.0f, 16.0f, 0.0f,
            -1.0f, 0.0f, 6.0f,
-           WHITE),
+           MAGENTA),
   makeWall(9.0f, 16.0f, 0.0f,
            0.0f, 1.0f, 6.0f,
-           WHITE),
+           MAGENTA),
   makeWall(10.0f, 17.0f, 0.0f,
            0.0f, -1.0f, 6.0f,
-           WHITE),
+           MAGENTA),
 
   // Right column
   makeWall(15.0f, 17.0f, 0.0f,
            1.0f, 0.0f, 6.0f,
-           WHITE),
+           MAGENTA),
   makeWall(16.0f, 16.0f, 0.0f,
            -1.0f, 0.0f, 6.0f,
-           WHITE),
+           MAGENTA),
   makeWall(15.0f, 16.0f, 0.0f,
            0.0f, 1.0f, 6.0f,
-           WHITE),
+           MAGENTA),
   makeWall(16.0f, 17.0f, 0.0f,
            0.0f, -1.0f, 6.0f,
-           WHITE),
+           MAGENTA),
 
   // Back wall
   makeWall(20.0f, 22.0f, 0.0f,

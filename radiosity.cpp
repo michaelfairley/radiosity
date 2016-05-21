@@ -6,14 +6,25 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/perpendicular.hpp>
+#include <glm/gtx/norm.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 #define fail { printf("FAIL %d\n", __LINE__); return 1; }
 
 #define ARRAY_LENGTH(x) (sizeof(x) / sizeof(x[0]))
 
+#define PRINT(v) printf("%s\n", glm::to_string(v).c_str())
+
+
+#define HEMICUBE_RESOLUTION 200
+
 void tick();
 GLuint createShader(const char* name, GLenum shaderType);
 void render(glm::mat4 camera);
+void renderHemicube(glm::vec3 location, glm::vec3 normal);
+void setDisplaySize(int width, int height);
 
 bool quit = false;
 
@@ -55,7 +66,9 @@ struct Quad {
 };
 
 const Color WHITE = {0.85f, 0.85f, 0.85f};
+const Color MAGENTA = {0.8f, 0.0f, 0.8f};
 const Color RED = {0.8f, 0.0f, 0.0f};
+const Color BLUE = {0.0f, 0.0f, 0.8f};
 
 #include "geometry.cpp"
 
@@ -97,11 +110,6 @@ int main(int argc, char** argv) {
   }
 
   glUseProgram(directProgram);
-  {
-    GLint projLoc = glGetUniformLocation(directProgram, "proj");
-    glm::mat4 proj = glm::perspective(45.0f, 640.0f/480.0f, 0.1f, 100.0f);
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-  }
   {
     GLint directionalDirLoc = glGetUniformLocation(directProgram, "directional_dir");
     glm::vec3 lightDir = glm::normalize(glm::vec3(0.2f, 1.0f, -1.0f));
@@ -148,6 +156,28 @@ int main(int argc, char** argv) {
   glEnable(GL_CULL_FACE);
   glFrontFace(GL_CW);
   glCullFace(GL_BACK);
+
+  /*
+  renderHemicube(glm::vec3(10.0f, 22.0f, 3.5f), glm::vec3(0.0f, -1.0f, 0.0f));
+  renderHemicube(glm::vec3(9.0f, 19.0f, 3.5f), glm::vec3(1.0f, 0.0f, 0.0f));
+  renderHemicube(glm::vec3(8.0f, 18.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  */
+
+  {
+    int width;
+    int height;
+    SDL_GetWindowSize(window, &width, &height);
+
+    glUseProgram(directProgram);
+    {
+      GLint projLoc = glGetUniformLocation(directProgram, "proj");
+      glm::mat4 proj = glm::perspective((float) M_PI/3, (float) width / (float) height, 0.1f, 100.0f);
+      glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+    }
+    glUseProgram(0);
+
+    glViewport(0, 0, width, height);
+  }
 
   while (!quit) {
     tick();
@@ -229,6 +259,102 @@ void render(glm::mat4 camera) {
   glBindVertexArray(0);
 
   glUseProgram(0);
+}
+
+void renderHemicube(glm::vec3 location, glm::vec3 normal) {
+  GLuint frameBuffer;
+  glGenFramebuffers(1, &frameBuffer);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+  GLuint texColorBuffer;
+  glGenTextures(1, &texColorBuffer);
+  glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, HEMICUBE_RESOLUTION*2, HEMICUBE_RESOLUTION*2, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+
+  GLuint rboDepth;
+  glGenRenderbuffers(1, &rboDepth);
+  glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, HEMICUBE_RESOLUTION*2, HEMICUBE_RESOLUTION*2);
+
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+  {
+    glUseProgram(directProgram);
+    GLint projLoc = glGetUniformLocation(directProgram, "proj");
+    glm::mat4 proj = glm::perspective((float) M_PI_2, 1.0f, 0.1f, 100.0f);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+    glUseProgram(0);
+  }
+
+  glm::vec3 up;
+  if (glm::angle(normal, glm::vec3(0.0f, 0.0f, 1.0f)) > 0.1) {
+    up = glm::vec3(0.0f, 0.0f, 1.0f);
+  } else {
+    up = glm::vec3(1.0f, 0.0f, 0.0f);
+  }
+
+  glm::vec3 sideways = glm::cross(normal, up);
+
+  PRINT(normal);
+  PRINT(sideways);
+  PRINT(up);
+  printf("\n");
+
+  // Front
+  {
+    glViewport(HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
+    glm::mat4 camera = glm::lookAt(location, location + normal, up);
+    render(camera);
+  }
+
+  {
+    glEnable(GL_SCISSOR_TEST);
+
+    // Right
+    {
+      glViewport(HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
+      glScissor(HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION);
+      glm::mat4 camera = glm::lookAt(location, location + sideways, up);
+      render(camera);
+    }
+
+    // Left
+    {
+      glScissor(0, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION);
+      glViewport(-HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
+      glm::mat4 camera = glm::lookAt(location, location - sideways, up);
+      render(camera);
+    }
+
+    // Down
+    {
+      glViewport(HEMICUBE_RESOLUTION/2, -HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
+      glScissor(HEMICUBE_RESOLUTION/2, 0, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION/2);
+      glm::mat4 camera = glm::lookAt(location, location - up, normal);
+      render(camera);
+    }
+
+    // Up
+    {
+      glViewport(HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
+      glScissor(HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION/2);
+      glm::mat4 camera = glm::lookAt(location, location + up, -normal);
+      render(camera);
+    }
+
+    glDisable(GL_SCISSOR_TEST);
+  }
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 GLuint createShader(const char* filename, GLenum shaderType) {
