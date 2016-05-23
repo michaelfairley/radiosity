@@ -43,7 +43,7 @@ GLuint vbo;
 GLuint vao;
 
 GLuint programs[2];
-int currentProgram = 0;
+int currentProgram = 1;
 
 #define POSITION_ATTRIB 0
 #define NORMAL_ATTRIB 1
@@ -72,7 +72,6 @@ struct Quad {
 };
 
 const Color WHITE = {0.85f, 0.85f, 0.85f};
-const Color BLACK = {0.0f, 0.0f, 0.0f};
 const Color MAGENTA = {0.8f, 0.0f, 0.8f};
 const Color RED = {0.8f, 0.0f, 0.0f};
 const Color BLUE = {0.0f, 0.0f, 0.8f};
@@ -353,11 +352,6 @@ void renderHemicube(glm::vec3 location, glm::vec3 normal) {
 
   glm::vec3 sideways = glm::cross(normal, up);
 
-  PRINT(normal);
-  PRINT(sideways);
-  PRINT(up);
-  printf("\n");
-
   // Front
   {
     glViewport(HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
@@ -443,46 +437,55 @@ GLuint createShader(const char* filename, GLenum shaderType) {
   return shader;
 }
 
+typedef struct {
+  int width;
+  int height;
+} Size;
+
+Size quadSize(int quad) {
+  Vertex topLeft = quads[quad].vertices[0];
+  Vertex bottomRight = quads[quad].vertices[2];
+
+  glm::vec3 diff = glm::abs(topLeft.position - bottomRight.position);
+  int width = 0;
+  int height = 0;
+
+  if (diff.y > 0.01) {
+    if (width == 0) {
+      width = diff.y * TEXEL_DENSITY;
+    } else {
+      height = diff.y * TEXEL_DENSITY;
+    }
+  }
+  if (diff.x > 0.01) {
+    if (width == 0) {
+      width = diff.x * TEXEL_DENSITY;
+    } else {
+      height = diff.x * TEXEL_DENSITY;
+    }
+  }
+  if (diff.z > 0.01) {
+    assert(height == 0);
+    height = diff.z * TEXEL_DENSITY;
+  }
+
+  Size size = {width, height};
+  return size;
+}
+
 void generateTextures() {
   glGenTextures(ARRAY_LENGTH(textures), textures);
   for (int i = 0; i < ARRAY_LENGTH(textures); i++) {
-    Vertex topLeft = quads[i].vertices[0];
-    Vertex bottomRight = quads[i].vertices[2];
-
-    glm::vec3 diff = glm::abs(topLeft.position - bottomRight.position);
-    int width = 0;
-    int height = 0;
-
-    if (diff.y > 0.01) {
-      if (width == 0) {
-        width = diff.y * TEXEL_DENSITY;
-      } else {
-        height = diff.y * TEXEL_DENSITY;
-      }
-    }
-    if (diff.x > 0.01) {
-      if (width == 0) {
-        width = diff.x * TEXEL_DENSITY;
-      } else {
-        height = diff.x * TEXEL_DENSITY;
-      }
-    }
-    if (diff.z > 0.01) {
-      assert(height == 0);
-      height = diff.z * TEXEL_DENSITY;
-    }
-
-    printf("%d %d\n", width, height);
+    Size size = quadSize(i);
+    int width = size.width;
+    int height = size.height;
 
     textureData[i] = (Color*) malloc(sizeof(Color) * width * height * TEXEL_DENSITY * TEXEL_DENSITY);
 
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
-        if ((x+y) % 2 == 0) {
-          textureData[i][y*width + x] = WHITE;
-        } else {
-          textureData[i][y*width + x] = BLACK;
-        }
+        Color black = {0.0f, 0.0f, 0.0f};
+        textureData[i][y*width + x] = black;
       }
     }
 

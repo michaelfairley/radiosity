@@ -1,6 +1,5 @@
 multiplier map
 material properties
 HDR
-apply lightmaps
 iterate
 rect packing
