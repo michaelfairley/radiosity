@@ -6,12 +6,12 @@ Quad makeQuad(glm::vec3 a,
               glm::vec3 normal,
               Color color) {
   Quad quad =  {{
-      { a, normal, color },
-      { b, normal, color },
-      { c, normal, color },
-      { a, normal, color },
-      { c, normal, color },
-      { d, normal, color }
+      { a, normal, color, {0.0, 0.0} },
+      { b, normal, color, {1.0, 0.0} },
+      { c, normal, color, {1.0, 1.0} },
+      { a, normal, color, {0.0, 0.0} },
+      { c, normal, color, {1.0, 1.0} },
+      { d, normal, color, {0.0, 1.0} }
     }};
 
   return quad;
@@ -61,10 +61,10 @@ Quad makeCeiling(float x, float y,
                  Color color) {
   assert(dx != 0 && dy != 0);
 
-  return makeQuad(glm::vec3(x, y, 6.0f),
+  return makeQuad(glm::vec3(x, y + dy, 6.0f),
+                  glm::vec3(x, y, 6.0f),
                   glm::vec3(x + dx, y, 6.0f),
                   glm::vec3(x + dx, y + dy, 6.0f),
-                  glm::vec3(x, y + dy, 6.0f),
                   glm::vec3(0.0f, 0.0f, -1.0f),
                   BLUE);
 }

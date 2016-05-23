@@ -19,12 +19,14 @@
 
 
 #define HEMICUBE_RESOLUTION 200
+#define TEXEL_DENSITY 16
 
 void tick();
 GLuint createShader(const char* name, GLenum shaderType);
 void render(glm::mat4 camera);
 void renderHemicube(glm::vec3 location, glm::vec3 normal);
 void setDisplaySize(int width, int height);
+void generateTextures();
 
 bool quit = false;
 
@@ -44,6 +46,7 @@ GLuint directProgram;
 #define POSITION_ATTRIB 0
 #define NORMAL_ATTRIB 1
 #define COLOR_ATTRIB 2
+#define TEXCOORD_ATTRIB 3
 
 struct Color {
   float r;
@@ -59,6 +62,7 @@ struct Vertex {
   glm::vec3 position;
   glm::vec3 normal;
   Color color;
+  float uv[2];
 };
 
 struct Quad {
@@ -66,11 +70,15 @@ struct Quad {
 };
 
 const Color WHITE = {0.85f, 0.85f, 0.85f};
+const Color BLACK = {0.0f, 0.0f, 0.0f};
 const Color MAGENTA = {0.8f, 0.0f, 0.8f};
 const Color RED = {0.8f, 0.0f, 0.0f};
 const Color BLUE = {0.0f, 0.0f, 0.8f};
 
 #include "geometry.cpp"
+
+GLuint textures[ARRAY_LENGTH(quads)];
+Color *textureData[ARRAY_LENGTH(quads)];
 
 int main(int argc, char** argv) {
 
@@ -91,8 +99,8 @@ int main(int argc, char** argv) {
   SDL_SetRelativeMouseMode(SDL_TRUE);
 
 
-  GLuint directVert = createShader("shaders/direct.vert.glsl", GL_VERTEX_SHADER);
-  GLuint directFrag = createShader("shaders/direct.frag.glsl", GL_FRAGMENT_SHADER);
+  GLuint directVert = createShader("shaders/radiosity.vert.glsl", GL_VERTEX_SHADER);
+  GLuint directFrag = createShader("shaders/radiosity.frag.glsl", GL_FRAGMENT_SHADER);
 
   directProgram = glCreateProgram();
   {
@@ -102,6 +110,7 @@ int main(int argc, char** argv) {
     glBindAttribLocation(directProgram, POSITION_ATTRIB, "position");
     glBindAttribLocation(directProgram, NORMAL_ATTRIB, "normal");
     glBindAttribLocation(directProgram, COLOR_ATTRIB, "color");
+    glBindAttribLocation(directProgram, TEXCOORD_ATTRIB, "texcoord");
 
     glLinkProgram(directProgram);
 
@@ -144,9 +153,14 @@ int main(int argc, char** argv) {
     glEnableVertexAttribArray(COLOR_ATTRIB);
     glVertexAttribPointer(COLOR_ATTRIB, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (6 * sizeof(float)));
 
+    glEnableVertexAttribArray(TEXCOORD_ATTRIB);
+    glVertexAttribPointer(TEXCOORD_ATTRIB, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (9 * sizeof(float)));
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
   }
+
+  generateTextures();
 
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
@@ -250,12 +264,17 @@ void render(glm::mat4 camera) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glUseProgram(directProgram);
+  GLint texLoc = glGetUniformLocation(directProgram, "tex");
+  glUniform1i(texLoc, 0);
 
   GLint cameraLoc = glGetUniformLocation(directProgram, "camera");
   glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(camera));
 
   glBindVertexArray(vao);
-  glDrawArrays(GL_TRIANGLES, 0, ARRAY_LENGTH(quads)*6);
+  for (int i = 0; i < ARRAY_LENGTH(quads); i++) {
+    glBindTexture(GL_TEXTURE_2D, textures[i]);
+    glDrawArrays(GL_TRIANGLES, 6 * i, 6);
+  }
   glBindVertexArray(0);
 
   glUseProgram(0);
@@ -392,4 +411,60 @@ GLuint createShader(const char* filename, GLenum shaderType) {
 
 
   return shader;
+}
+
+void generateTextures() {
+  glGenTextures(ARRAY_LENGTH(textures), textures);
+  for (int i = 0; i < ARRAY_LENGTH(textures); i++) {
+    Vertex topLeft = quads[i].vertices[0];
+    Vertex bottomRight = quads[i].vertices[2];
+
+    glm::vec3 diff = glm::abs(topLeft.position - bottomRight.position);
+    int width = 0;
+    int height = 0;
+
+    if (diff.y > 0.01) {
+      if (width == 0) {
+        width = diff.y * TEXEL_DENSITY;
+      } else {
+        height = diff.y * TEXEL_DENSITY;
+      }
+    }
+    if (diff.x > 0.01) {
+      if (width == 0) {
+        width = diff.x * TEXEL_DENSITY;
+      } else {
+        height = diff.x * TEXEL_DENSITY;
+      }
+    }
+    if (diff.z > 0.01) {
+      assert(height == 0);
+      height = diff.z * TEXEL_DENSITY;
+    }
+
+    printf("%d %d\n", width, height);
+
+    textureData[i] = (Color*) malloc(sizeof(Color) * width * height * TEXEL_DENSITY * TEXEL_DENSITY);
+
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        if ((x+y) % 2 == 0) {
+          textureData[i][y*width + x] = WHITE;
+        } else {
+          textureData[i][y*width + x] = BLACK;
+        }
+      }
+    }
+
+    glBindTexture(GL_TEXTURE_2D, textures[i]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData[i]);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    float border[3] = {0.0f, 1.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  }
 }
