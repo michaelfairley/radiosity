@@ -23,7 +23,7 @@
 
 void tick();
 GLuint createShader(const char* name, GLenum shaderType);
-void render(glm::mat4 camera);
+void render(glm::mat4 camera, GLuint program);
 void renderHemicube(glm::vec3 location, glm::vec3 normal);
 void setDisplaySize(int width, int height);
 void generateTextures();
@@ -41,7 +41,9 @@ SDL_Window* window;
 
 GLuint vbo;
 GLuint vao;
-GLuint directProgram;
+
+GLuint programs[2];
+int currentProgram = 0;
 
 #define POSITION_ATTRIB 0
 #define NORMAL_ATTRIB 1
@@ -99,11 +101,12 @@ int main(int argc, char** argv) {
   SDL_SetRelativeMouseMode(SDL_TRUE);
 
 
-  GLuint directVert = createShader("shaders/radiosity.vert.glsl", GL_VERTEX_SHADER);
-  GLuint directFrag = createShader("shaders/radiosity.frag.glsl", GL_FRAGMENT_SHADER);
-
-  directProgram = glCreateProgram();
+  programs[0] = glCreateProgram();
   {
+    GLuint directProgram = programs[0];
+    GLuint directVert = createShader("shaders/direct.vert.glsl", GL_VERTEX_SHADER);
+    GLuint directFrag = createShader("shaders/direct.frag.glsl", GL_FRAGMENT_SHADER);
+
     glAttachShader(directProgram, directVert);
     glAttachShader(directProgram, directFrag);
 
@@ -118,15 +121,37 @@ int main(int argc, char** argv) {
     glDeleteShader(directFrag);
   }
 
-  glUseProgram(directProgram);
+  programs[1] = glCreateProgram();
   {
-    GLint directionalDirLoc = glGetUniformLocation(directProgram, "directional_dir");
-    glm::vec3 lightDir = glm::normalize(glm::vec3(0.2f, 1.0f, -1.0f));
-    glUniform3fv(directionalDirLoc, 1, glm::value_ptr(lightDir));
+    GLuint radiosityProgram = programs[1];
+    GLuint radiosityVert = createShader("shaders/radiosity.vert.glsl", GL_VERTEX_SHADER);
+    GLuint radiosityFrag = createShader("shaders/radiosity.frag.glsl", GL_FRAGMENT_SHADER);
+
+    glAttachShader(radiosityProgram, radiosityVert);
+    glAttachShader(radiosityProgram, radiosityFrag);
+
+    glBindAttribLocation(radiosityProgram, POSITION_ATTRIB, "position");
+    glBindAttribLocation(radiosityProgram, NORMAL_ATTRIB, "normal");
+    glBindAttribLocation(radiosityProgram, COLOR_ATTRIB, "color");
+    glBindAttribLocation(radiosityProgram, TEXCOORD_ATTRIB, "texcoord");
+
+    glLinkProgram(radiosityProgram);
+
+    glDeleteShader(radiosityVert);
+    glDeleteShader(radiosityFrag);
   }
-  {
-    GLint directionalIntensityLoc = glGetUniformLocation(directProgram, "directional_intensity");
-    glUniform1f(directionalIntensityLoc, 0.3f);
+
+  for (int i = 0; i < ARRAY_LENGTH(programs); i++) {
+    glUseProgram(programs[i]);
+    {
+      GLint directionalDirLoc = glGetUniformLocation(programs[i], "directional_dir");
+      glm::vec3 lightDir = glm::normalize(glm::vec3(0.2f, 1.0f, -1.0f));
+      glUniform3fv(directionalDirLoc, 1, glm::value_ptr(lightDir));
+    }
+    {
+      GLint directionalIntensityLoc = glGetUniformLocation(programs[i], "directional_intensity");
+      glUniform1f(directionalIntensityLoc, 0.3f);
+    }
   }
   glUseProgram(0);
 
@@ -182,11 +207,13 @@ int main(int argc, char** argv) {
     int height;
     SDL_GetWindowSize(window, &width, &height);
 
-    glUseProgram(directProgram);
-    {
-      GLint projLoc = glGetUniformLocation(directProgram, "proj");
-      glm::mat4 proj = glm::perspective((float) M_PI/3, (float) width / (float) height, 0.1f, 100.0f);
-      glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+    for (int i = 0; i < ARRAY_LENGTH(programs); i++) {
+      glUseProgram(programs[i]);
+      {
+        GLint projLoc = glGetUniformLocation(programs[i], "proj");
+        glm::mat4 proj = glm::perspective((float) M_PI/3, (float) width / (float) height, 0.1f, 100.0f);
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+      }
     }
     glUseProgram(0);
 
@@ -195,7 +222,6 @@ int main(int argc, char** argv) {
 
   while (!quit) {
     tick();
-
   }
 
   return 0;
@@ -213,6 +239,8 @@ void tick() {
       case SDL_KEYDOWN: {
         if (event.key.keysym.sym == SDLK_ESCAPE) {
           quit = true;
+        } else if (event.key.keysym.sym == 'p') {
+          currentProgram = (currentProgram + 1) % ARRAY_LENGTH(programs);
         }
       } break;
       case SDL_MOUSEMOTION: {
@@ -252,22 +280,22 @@ void tick() {
                   cameraRotateZ, glm::vec3(0.0, 0.0, 1.0f));
     glm::mat4 camera = glm::translate(cameraRotated, -cameraPosition);
 
-    render(camera);
+    render(camera, programs[currentProgram]);
   }
 
   SDL_GL_SwapWindow(window);
 }
 
-void render(glm::mat4 camera) {
+void render(glm::mat4 camera, GLuint program) {
   glClearColor(1.0, 1.0, 1.0, 1.0);
   glClearDepth(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glUseProgram(directProgram);
-  GLint texLoc = glGetUniformLocation(directProgram, "tex");
+  glUseProgram(program);
+  GLint texLoc = glGetUniformLocation(program, "tex");
   glUniform1i(texLoc, 0);
 
-  GLint cameraLoc = glGetUniformLocation(directProgram, "camera");
+  GLint cameraLoc = glGetUniformLocation(program, "camera");
   glUniformMatrix4fv(cameraLoc, 1, GL_FALSE, glm::value_ptr(camera));
 
   glBindVertexArray(vao);
@@ -281,6 +309,8 @@ void render(glm::mat4 camera) {
 }
 
 void renderHemicube(glm::vec3 location, glm::vec3 normal) {
+  GLuint program = programs[1];
+
   GLuint frameBuffer;
   glGenFramebuffers(1, &frameBuffer);
 
@@ -307,8 +337,8 @@ void renderHemicube(glm::vec3 location, glm::vec3 normal) {
   glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
   {
-    glUseProgram(directProgram);
-    GLint projLoc = glGetUniformLocation(directProgram, "proj");
+    glUseProgram(program);
+    GLint projLoc = glGetUniformLocation(program, "proj");
     glm::mat4 proj = glm::perspective((float) M_PI_2, 1.0f, 0.1f, 100.0f);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
     glUseProgram(0);
@@ -332,7 +362,7 @@ void renderHemicube(glm::vec3 location, glm::vec3 normal) {
   {
     glViewport(HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
     glm::mat4 camera = glm::lookAt(location, location + normal, up);
-    render(camera);
+    render(camera, program);
   }
 
   {
@@ -343,7 +373,7 @@ void renderHemicube(glm::vec3 location, glm::vec3 normal) {
       glViewport(HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
       glScissor(HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION);
       glm::mat4 camera = glm::lookAt(location, location + sideways, up);
-      render(camera);
+      render(camera, program);
     }
 
     // Left
@@ -351,7 +381,7 @@ void renderHemicube(glm::vec3 location, glm::vec3 normal) {
       glScissor(0, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION);
       glViewport(-HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
       glm::mat4 camera = glm::lookAt(location, location - sideways, up);
-      render(camera);
+      render(camera, program);
     }
 
     // Down
@@ -359,7 +389,7 @@ void renderHemicube(glm::vec3 location, glm::vec3 normal) {
       glViewport(HEMICUBE_RESOLUTION/2, -HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
       glScissor(HEMICUBE_RESOLUTION/2, 0, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION/2);
       glm::mat4 camera = glm::lookAt(location, location - up, normal);
-      render(camera);
+      render(camera, program);
     }
 
     // Up
@@ -367,7 +397,7 @@ void renderHemicube(glm::vec3 location, glm::vec3 normal) {
       glViewport(HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
       glScissor(HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION/2);
       glm::mat4 camera = glm::lookAt(location, location + up, -normal);
-      render(camera);
+      render(camera, program);
     }
 
     glDisable(GL_SCISSOR_TEST);
