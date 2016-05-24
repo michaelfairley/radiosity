@@ -68,6 +68,13 @@ struct Vertex {
   float uv[2];
 };
 
+struct Rect {
+  vec3 origin;
+  vec3 da;
+  vec3 db;
+  Color color;
+};
+
 struct Quad {
   Vertex vertices[6];
 };
@@ -83,6 +90,7 @@ GLuint textures[ARRAY_LENGTH(quads)];
 Color *textureData[ARRAY_LENGTH(quads)];
 
 int main(int argc, char** argv) {
+  buildMesh();
 
   if (SDL_Init(SDL_INIT_VIDEO) < 0) fail;
 

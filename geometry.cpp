@@ -17,163 +17,179 @@ Quad makeQuad(vec3 a,
   return quad;
 }
 
-Quad makeWall(float x, float y, float z,
-              float dx, float dy, float dz,
-              Color color) {
-  assert(dx == 0 || dy == 0);
-  assert(dx != 0 || dy != 0);
-  assert(dz > 0);
-
-  vec3 normal;
-  if(dx > 0) {
-    normal = vec3(0.0f, 1.0f, 0.0f);
-  } else if (dx < 0) {
-    normal = vec3(0.0f, -1.0f, 0.0f);
-  } else if(dy > 0) {
-    normal = vec3(-1.0f, 0.0f, 0.0f);
-  } else if (dy < 0) {
-    normal = vec3(1.0f, 0.0f, 0.0f);
-  }
-
-  return makeQuad(vec3(x, y, z),
-                  vec3(x + dx, y + dy, z),
-                  vec3(x + dx, y + dy, z + dz),
-                  vec3(x, y, z + dz),
-                  normal,
-                  color);
-}
-
-Quad makeFloor(float x, float y,
+Rect makeFloor(float x, float y,
                float dx, float dy,
                Color color) {
   assert(dx != 0 && dy != 0);
 
-  return makeQuad(vec3(x, y, 0.0f),
-                  vec3(x, y + dy, 0.0f),
-                  vec3(x + dx, y + dy, 0.0f),
-                  vec3(x + dx, y, 0.0f),
-                  vec3(0.0f, 0.0f, 1.0f),
-                  color);
+  Rect rect = {vec3(x, y, 0.0f),
+               vec3(0.0f, dy, 0.0f),
+               vec3(dx, 0.0f, 0.0f),
+               color};
+
+  return rect;
 }
 
-Quad makeCeiling(float x, float y,
+Rect makeCeiling(float x, float y,
                  float dx, float dy,
                  Color color) {
   assert(dx != 0 && dy != 0);
 
-  return makeQuad(vec3(x, y + dy, 6.0f),
-                  vec3(x, y, 6.0f),
-                  vec3(x + dx, y, 6.0f),
-                  vec3(x + dx, y + dy, 6.0f),
-                  vec3(0.0f, 0.0f, -1.0f),
-                  BLUE);
+  Rect rect = {vec3(x, y + dy, 6.0f),
+               vec3(0.0f, -dy, 0.0f),
+               vec3(dx, 0.0f, 0.0f),
+               BLUE};
+
+  return rect;
 }
 
-Quad quads[] = {
+Quad makeQuad(Rect rect) {
+  vec3 normal = glm::normalize(glm::cross(rect.db, rect.da));
+
+  return makeQuad(rect.origin,
+                  rect.origin + rect.da,
+                  rect.origin + rect.da + rect.db,
+                  rect.origin + rect.db,
+                  normal,
+                  rect.color);
+}
+
+Rect rects[] = {
   // Left column
-  makeWall(9.0f, 17.0f, 0.0f,
-           1.0f, 0.0f, 6.0f,
-           MAGENTA),
-  makeWall(10.0f, 16.0f, 0.0f,
-           -1.0f, 0.0f, 6.0f,
-           MAGENTA),
-  makeWall(9.0f, 16.0f, 0.0f,
-           0.0f, 1.0f, 6.0f,
-           MAGENTA),
-  makeWall(10.0f, 17.0f, 0.0f,
-           0.0f, -1.0f, 6.0f,
-           MAGENTA),
+  {vec3(9.0f, 17.0f, 0.0f),
+   vec3(1.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   MAGENTA},
+  {vec3(10.0f, 16.0f, 0.0f),
+   vec3(-1.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   MAGENTA},
+  {vec3(9.0f, 16.0f, 0.0f),
+   vec3(0.0f, 1.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   MAGENTA},
+  {vec3(10.0f, 17.0f, 0.0f),
+   vec3(0.0f, -1.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   MAGENTA},
 
   // Right column
-  makeWall(15.0f, 17.0f, 0.0f,
-           1.0f, 0.0f, 6.0f,
-           MAGENTA),
-  makeWall(16.0f, 16.0f, 0.0f,
-           -1.0f, 0.0f, 6.0f,
-           MAGENTA),
-  makeWall(15.0f, 16.0f, 0.0f,
-           0.0f, 1.0f, 6.0f,
-           MAGENTA),
-  makeWall(16.0f, 17.0f, 0.0f,
-           0.0f, -1.0f, 6.0f,
-           MAGENTA),
+  {vec3(15.0f, 17.0f, 0.0f),
+   vec3(1.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   MAGENTA},
+  {vec3(16.0f, 16.0f, 0.0f),
+   vec3(-1.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   MAGENTA},
+  {vec3(15.0f, 16.0f, 0.0f),
+   vec3(0.0f, 1.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   MAGENTA},
+  {vec3(16.0f, 17.0f, 0.0f),
+   vec3(0.0f, -1.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   MAGENTA},
 
   // Back wall
-  makeWall(20.0f, 22.0f, 0.0f,
-           -15.0f, 0.0f, 6.0f,
-           WHITE),
+  {vec3(20.0f, 22.0f, 0.0f),
+   vec3(-15.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
 
   // Left Wall
-  makeWall(5.0f, 22.0f, 0.0f,
-           0.0f, -3.0f, 6.0f,
-           WHITE),
-  makeWall(5.0f, 19.0f, 0.0f,
-           1.0f, 0.0f, 6.0f,
-           WHITE),
-  makeWall(6.0f, 19.0f, 0.0f,
-           0.0f, -5.0f, 6.0f,
-           WHITE),
-  makeWall(6.0f, 14.0f, 0.0f,
-           -1.0f, 0.0f, 6.0f,
-           WHITE),
-  makeWall(5.0f, 14.0f, 0.0f,
-           0.0f, -3.0f, 6.0f,
-           WHITE),
+  {vec3(5.0f, 22.0f, 0.0f),
+   vec3(0.0f, -3.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(5.0f, 19.0f, 0.0f),
+   vec3(1.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(6.0f, 19.0f, 0.0f),
+   vec3(0.0f, -5.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(6.0f, 14.0f, 0.0f),
+   vec3(-1.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(5.0f, 14.0f, 0.0f),
+   vec3(0.0f, -3.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
 
   // Front wall
-  makeWall(5.0f, 11.0f, 0.0f,
-           3.0f, 0.0f, 1.5f,
-           WHITE),
-  makeWall(5.0f, 11.0f, 5.0f,
-           3.0f, 0.0f, 1.0f,
-           WHITE),
-  makeWall(8.0f, 11.0f, 0.0f,
-           0.0f, 0.5f, 6.0f,
-           WHITE),
-  makeWall(8.0f, 11.5f, 0.0f,
-           3.0f, 0.0f, 6.0f,
-           WHITE),
-  makeWall(11.0f, 11.5f, 0.0f,
-           0.0f, -0.5f, 6.0f,
-           WHITE),
-  makeWall(11.0f, 11.0f, 0.0f,
-           3.0f, 0.0f, 1.5f,
-           WHITE),
-  makeWall(11.0f, 11.0f, 5.0f,
-           3.0f, 0.0f, 1.0f,
-           WHITE),
-  makeWall(14.0f, 11.0f, 0.0f,
-           0.0f, 0.5f, 6.0f,
-           WHITE),
-  makeWall(14.0f, 11.5f, 0.0f,
-           3.0f, 0.0f, 6.0f,
-           WHITE),
-  makeWall(17.0f, 11.5f, 0.0f,
-           0.0f, -0.5f, 6.0f,
-           WHITE),
-  makeWall(17.0f, 11.0f, 0.0f,
-           3.0f, 0.0f, 1.5f,
-           WHITE),
-  makeWall(17.0f, 11.0f, 5.0f,
-           3.0f, 0.0f, 1.0f,
-           WHITE),
+  {vec3(5.0f, 11.0f, 0.0f),
+   vec3(3.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 1.5f),
+   WHITE},
+  {vec3(5.0f, 11.0f, 5.0f),
+   vec3(3.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 1.0f),
+   WHITE},
+  {vec3(8.0f, 11.0f, 0.0f),
+   vec3(0.0f, 0.5f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(8.0f, 11.5f, 0.0f),
+   vec3(3.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(11.0f, 11.5f, 0.0f),
+   vec3(0.0f, -0.5f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(11.0f, 11.0f, 0.0f),
+   vec3(3.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 1.5f),
+   WHITE},
+  {vec3(11.0f, 11.0f, 5.0f),
+   vec3(3.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 1.0f),
+   WHITE},
+  {vec3(14.0f, 11.0f, 0.0f),
+   vec3(0.0f, 0.5f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(14.0f, 11.5f, 0.0f),
+   vec3(3.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(17.0f, 11.5f, 0.0f),
+   vec3(0.0f, -0.5f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(17.0f, 11.0f, 0.0f),
+   vec3(3.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 1.5f),
+   WHITE},
+  {vec3(17.0f, 11.0f, 5.0f),
+   vec3(3.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 1.0f),
+   WHITE},
 
   // Right wall
-  makeWall(20.0f, 11.0f, 0.0f,
-           0.0f, 3.0f, 6.0f,
-           WHITE),
-  makeWall(20.0f, 14.0f, 0.0f,
-           -1.0f, 0.0f, 6.0f,
-           WHITE),
-  makeWall(19.0f, 14.0f, 0.0f,
-           0.0f, 5.0f, 6.0f,
-           WHITE),
-  makeWall(19.0f, 19.0f, 0.0f,
-           1.0f, 0.0f, 6.0f,
-           WHITE),
-  makeWall(20.0f, 19.0f, 0.0f,
-           0.0f, 3.0f, 6.0f,
-           WHITE),
+  {vec3(20.0f, 11.0f, 0.0f),
+   vec3(0.0f, 3.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(20.0f, 14.0f, 0.0f),
+   vec3(-1.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(19.0f, 14.0f, 0.0f),
+   vec3(0.0f, 5.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(19.0f, 19.0f, 0.0f),
+   vec3(1.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
+  {vec3(20.0f, 19.0f, 0.0f),
+   vec3(0.0f, 3.0f, 0.0f),
+   vec3(0.0f, 0.0f, 6.0f),
+   WHITE},
 
   // Floor
   makeFloor(5.0f, 11.0f,
@@ -246,3 +262,11 @@ Quad quads[] = {
             WHITE)
 
 };
+
+Quad quads[ARRAY_LENGTH(rects)];
+
+void buildMesh() {
+  for (int i = 0; i < ARRAY_LENGTH(quads); i++) {
+    quads[i] = makeQuad(rects[i]);
+  }
+}
