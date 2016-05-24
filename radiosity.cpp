@@ -22,6 +22,9 @@ using glm::vec3;
 #define HEMICUBE_RESOLUTION 200
 #define TEXEL_DENSITY 4
 
+void radiosify();
+void hemicubeSetup();
+void loadTextures();
 void tick();
 GLuint createShader(const char* name, GLenum shaderType);
 void render(glm::mat4 camera, GLuint program);
@@ -88,6 +91,8 @@ const Color BLUE = {0.0f, 0.0f, 0.8f};
 
 GLuint textures[ARRAY_LENGTH(rects)];
 Color *textureData[ARRAY_LENGTH(rects)];
+
+Color hemicubeAverage();
 
 int main(int argc, char** argv) {
   buildMesh();
@@ -194,6 +199,9 @@ int main(int argc, char** argv) {
   }
 
   generateTextures();
+  loadTextures();
+
+  hemicubeSetup();
 
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
@@ -204,11 +212,10 @@ int main(int argc, char** argv) {
   glFrontFace(GL_CW);
   glCullFace(GL_BACK);
 
-  /*
-  renderHemicube(vec3(10.0f, 22.0f, 3.5f), vec3(0.0f, -1.0f, 0.0f));
-  renderHemicube(vec3(9.0f, 19.0f, 3.5f), vec3(1.0f, 0.0f, 0.0f));
-  renderHemicube(vec3(8.0f, 18.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f));
-  */
+  for (int i = 0; i < 2; i++) {
+    radiosify();
+    loadTextures();
+  }
 
   {
     int width;
@@ -316,33 +323,40 @@ void render(glm::mat4 camera, GLuint program) {
   glUseProgram(0);
 }
 
-void renderHemicube(vec3 location, vec3 normal) {
-  GLuint program = programs[1];
+GLuint hemicubeFrameBuffer;
+GLuint hemicubeColorBuffer;
+GLuint hemicubeDepthBuffer;
 
-  GLuint frameBuffer;
-  glGenFramebuffers(1, &frameBuffer);
+void hemicubeSetup() {
+  glGenFramebuffers(1, &hemicubeFrameBuffer);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, hemicubeFrameBuffer);
 
-  GLuint texColorBuffer;
-  glGenTextures(1, &texColorBuffer);
-  glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+  glGenTextures(1, &hemicubeColorBuffer);
+  glBindTexture(GL_TEXTURE_2D, hemicubeColorBuffer);
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, HEMICUBE_RESOLUTION*2, HEMICUBE_RESOLUTION*2, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hemicubeColorBuffer, 0);
+  // glBindTexture(GL_TEXTURE_2D, 0);
 
-  GLuint rboDepth;
-  glGenRenderbuffers(1, &rboDepth);
-  glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+  glGenRenderbuffers(1, &hemicubeDepthBuffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, hemicubeDepthBuffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, HEMICUBE_RESOLUTION*2, HEMICUBE_RESOLUTION*2);
 
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, hemicubeDepthBuffer);
+  // glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+  // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void renderHemicube(vec3 location, vec3 normal) {
+  GLuint program = programs[1];
+
+  glBindFramebuffer(GL_FRAMEBUFFER, hemicubeFrameBuffer);
 
   {
     glUseProgram(program);
@@ -353,7 +367,7 @@ void renderHemicube(vec3 location, vec3 normal) {
   }
 
   vec3 up;
-  if (glm::angle(normal, vec3(0.0f, 0.0f, 1.0f)) > 0.1) {
+  if (glm::angle(normal, vec3(0.0f, 0.0f, 1.0f)) > 0.1 && glm::angle(normal, vec3(0.0f, 0.0f, -1.0f)) > 0.1) {
     up = vec3(0.0f, 0.0f, 1.0f);
   } else {
     up = vec3(1.0f, 0.0f, 0.0f);
@@ -409,6 +423,72 @@ void renderHemicube(vec3 location, vec3 normal) {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+Color hemicubeTextureData[HEMICUBE_RESOLUTION * 2][HEMICUBE_RESOLUTION * 2];
+
+Color hemicubeAverage() {
+  glBindFramebuffer(GL_FRAMEBUFFER, hemicubeFrameBuffer);
+
+  glReadPixels(0, 0,
+               HEMICUBE_RESOLUTION * 2, HEMICUBE_RESOLUTION * 2,
+               GL_RGB, GL_FLOAT,
+               hemicubeTextureData);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  float r = 0.0f;
+  float g = 0.0f;
+  float b = 0.0f;
+
+  for (int y = 0; y < HEMICUBE_RESOLUTION/2; y++) {
+    for (int x = HEMICUBE_RESOLUTION/2; x < HEMICUBE_RESOLUTION*3/2; x++) {
+      Color c = hemicubeTextureData[y][x];
+      r += c.r;
+      g += c.g;
+      b += c.b;
+    }
+  }
+
+  for (int y = HEMICUBE_RESOLUTION*3/2; y < HEMICUBE_RESOLUTION*2; y++) {
+    for (int x = HEMICUBE_RESOLUTION/2; x < HEMICUBE_RESOLUTION*3/2; x++) {
+      Color c = hemicubeTextureData[y][x];
+      r += c.r;
+      g += c.g;
+      b += c.b;
+    }
+  }
+
+  for (int y = HEMICUBE_RESOLUTION/2; y < HEMICUBE_RESOLUTION*3/2; y++) {
+    for (int x = 0; x < HEMICUBE_RESOLUTION/2; x++) {
+      Color c = hemicubeTextureData[y][x];
+      r += c.r;
+      g += c.g;
+      b += c.b;
+    }
+  }
+
+  for (int y = HEMICUBE_RESOLUTION/2; y < HEMICUBE_RESOLUTION*3/2; y++) {
+    for (int x = HEMICUBE_RESOLUTION*3/2; x < HEMICUBE_RESOLUTION*2; x++) {
+      Color c = hemicubeTextureData[y][x];
+      r += c.r;
+      g += c.g;
+      b += c.b;
+    }
+  }
+
+  for (int y = HEMICUBE_RESOLUTION/2; y < HEMICUBE_RESOLUTION*3/2; y++) {
+    for (int x = HEMICUBE_RESOLUTION/2; x < HEMICUBE_RESOLUTION*3/2; x++) {
+      Color c = hemicubeTextureData[y][x];
+      r += c.r;
+      g += c.g;
+      b += c.b;
+    }
+  }
+
+  int numPixels = HEMICUBE_RESOLUTION * HEMICUBE_RESOLUTION * 3 / 3;
+
+  Color color = {r / numPixels, g / numPixels, b / numPixels};
+  return color;
+}
+
 GLuint createShader(const char* filename, GLenum shaderType) {
   FILE* file = fopen(filename, "r");
 
@@ -457,13 +537,16 @@ void generateTextures() {
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         Color black = {0.0f, 0.0f, 0.0f};
-        if ((x+y) % 2) {
-          textureData[i][y*width + x] = black;
-        } else {
-          textureData[i][y*width + x] = rects[i].color;
-        }
+        textureData[i][y*width + x] = black;
       }
     }
+  }
+}
+
+void loadTextures() {
+  for (int i = 0; i < ARRAY_LENGTH(textures); i++) {
+    int width = glm::length(rects[i].da) * TEXEL_DENSITY;
+    int height = glm::length(rects[i].db) * TEXEL_DENSITY;
 
     glBindTexture(GL_TEXTURE_2D, textures[i]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData[i]);
@@ -473,7 +556,36 @@ void generateTextures() {
     float border[3] = {0.0f, 1.0f, 1.0f};
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  }
+}
+
+void radiosify() {
+  for (int i = 0; i < ARRAY_LENGTH(rects); i++) {
+    printf("Rect %d\n", i);
+    Rect rect = rects[i];
+    Color* texture = textureData[i];
+
+    vec3 norm = normal(rect);
+
+    int width = glm::length(rect.da) * TEXEL_DENSITY;
+    int height = glm::length(rect.db) * TEXEL_DENSITY;
+
+    vec3 da = rect.da / (float)width;
+    vec3 db = rect.db / (float)height;
+
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        vec3 location = rect.origin + da*(x+0.5f) + db*(y+0.5f);
+        renderHemicube(location, norm);
+        Color avg = hemicubeAverage();
+        Color result = {avg.r * rect.color.r,
+                        avg.g * rect.color.g,
+                        avg.b * rect.color.b};
+        texture[y*width + x] = result;
+
+      }
+    }
   }
 }

@@ -35,22 +35,24 @@ Rect makeCeiling(float x, float y,
                  Color color) {
   assert(dx != 0 && dy != 0);
 
-  Rect rect = {vec3(x, y + dy, 6.0f),
-               vec3(0.0f, -dy, 0.0f),
+  Rect rect = {vec3(x, y, 6.0f),
                vec3(dx, 0.0f, 0.0f),
+               vec3(0.0f, dy, 0.0f),
                BLUE};
 
   return rect;
 }
 
-Quad makeQuad(Rect rect) {
-  vec3 normal = glm::normalize(glm::cross(rect.db, rect.da));
+vec3 normal(Rect rect) {
+  return glm::normalize(glm::cross(rect.db, rect.da));
+}
 
+Quad makeQuad(Rect rect) {
   return makeQuad(rect.origin,
                   rect.origin + rect.da,
                   rect.origin + rect.da + rect.db,
                   rect.origin + rect.db,
-                  normal,
+                  normal(rect),
                   rect.color);
 }
 
