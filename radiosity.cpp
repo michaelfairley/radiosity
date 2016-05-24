@@ -17,6 +17,7 @@
 
 #define PRINT(v) printf("%s\n", glm::to_string(v).c_str())
 
+using glm::vec3;
 
 #define HEMICUBE_RESOLUTION 200
 #define TEXEL_DENSITY 16
@@ -24,13 +25,13 @@
 void tick();
 GLuint createShader(const char* name, GLenum shaderType);
 void render(glm::mat4 camera, GLuint program);
-void renderHemicube(glm::vec3 location, glm::vec3 normal);
+void renderHemicube(vec3 location, vec3 normal);
 void setDisplaySize(int width, int height);
 void generateTextures();
 
 bool quit = false;
 
-glm::vec3 cameraPosition = glm::vec3(10.0f, 20.0f, 3.5f);
+vec3 cameraPosition = vec3(10.0f, 20.0f, 3.5f);
 float cameraRotateZ = 2.75f;
 float cameraRotateUp = 0.0f;
 
@@ -61,8 +62,8 @@ struct Material {
 };
 
 struct Vertex {
-  glm::vec3 position;
-  glm::vec3 normal;
+  vec3 position;
+  vec3 normal;
   Color color;
   float uv[2];
 };
@@ -144,7 +145,7 @@ int main(int argc, char** argv) {
     glUseProgram(programs[i]);
     {
       GLint directionalDirLoc = glGetUniformLocation(programs[i], "directional_dir");
-      glm::vec3 lightDir = glm::normalize(glm::vec3(0.2f, 1.0f, -1.0f));
+      vec3 lightDir = glm::normalize(vec3(0.2f, 1.0f, -1.0f));
       glUniform3fv(directionalDirLoc, 1, glm::value_ptr(lightDir));
     }
     {
@@ -196,9 +197,9 @@ int main(int argc, char** argv) {
   glCullFace(GL_BACK);
 
   /*
-  renderHemicube(glm::vec3(10.0f, 22.0f, 3.5f), glm::vec3(0.0f, -1.0f, 0.0f));
-  renderHemicube(glm::vec3(9.0f, 19.0f, 3.5f), glm::vec3(1.0f, 0.0f, 0.0f));
-  renderHemicube(glm::vec3(8.0f, 18.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  renderHemicube(vec3(10.0f, 22.0f, 3.5f), vec3(0.0f, -1.0f, 0.0f));
+  renderHemicube(vec3(9.0f, 19.0f, 3.5f), vec3(1.0f, 0.0f, 0.0f));
+  renderHemicube(vec3(8.0f, 18.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f));
   */
 
   {
@@ -257,26 +258,26 @@ void tick() {
   {
     const Uint8 *keys = SDL_GetKeyboardState(NULL);
     if (keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W]) {
-      cameraPosition += glm::rotateZ(glm::vec3(0.0f, MOVE_SPEED, 0.0f), -cameraRotateZ);
+      cameraPosition += glm::rotateZ(vec3(0.0f, MOVE_SPEED, 0.0f), -cameraRotateZ);
     }
     if (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S]) {
-      cameraPosition -= glm::rotateZ(glm::vec3(0.0f, MOVE_SPEED, 0.0f), -cameraRotateZ);
+      cameraPosition -= glm::rotateZ(vec3(0.0f, MOVE_SPEED, 0.0f), -cameraRotateZ);
     }
     if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) {
-      cameraPosition += glm::rotateZ(glm::vec3(MOVE_SPEED, 0.0f, 0.0f), -cameraRotateZ);
+      cameraPosition += glm::rotateZ(vec3(MOVE_SPEED, 0.0f, 0.0f), -cameraRotateZ);
     }
     if (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A]) {
-      cameraPosition -= glm::rotateZ(glm::vec3(MOVE_SPEED, 0.0f, 0.0f), -cameraRotateZ);
+      cameraPosition -= glm::rotateZ(vec3(MOVE_SPEED, 0.0f, 0.0f), -cameraRotateZ);
     }
   }
 
   {
-    glm::mat4 cameraReorient = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f),
-                                           glm::vec3(0.0f, 1.0f, 0.0f),
-                                           glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::mat4 cameraReorient = glm::lookAt(vec3(0.0f, 0.0f, 0.0f),
+                                           vec3(0.0f, 1.0f, 0.0f),
+                                           vec3(0.0f, 0.0f, 1.0f));
     glm::mat4 cameraRotated =
-      glm::rotate(glm::rotate(cameraReorient, cameraRotateUp, glm::vec3(1.0f, 0.0f, 0.0f)),
-                  cameraRotateZ, glm::vec3(0.0, 0.0, 1.0f));
+      glm::rotate(glm::rotate(cameraReorient, cameraRotateUp, vec3(1.0f, 0.0f, 0.0f)),
+                  cameraRotateZ, vec3(0.0, 0.0, 1.0f));
     glm::mat4 camera = glm::translate(cameraRotated, -cameraPosition);
 
     render(camera, programs[currentProgram]);
@@ -307,7 +308,7 @@ void render(glm::mat4 camera, GLuint program) {
   glUseProgram(0);
 }
 
-void renderHemicube(glm::vec3 location, glm::vec3 normal) {
+void renderHemicube(vec3 location, vec3 normal) {
   GLuint program = programs[1];
 
   GLuint frameBuffer;
@@ -343,14 +344,14 @@ void renderHemicube(glm::vec3 location, glm::vec3 normal) {
     glUseProgram(0);
   }
 
-  glm::vec3 up;
-  if (glm::angle(normal, glm::vec3(0.0f, 0.0f, 1.0f)) > 0.1) {
-    up = glm::vec3(0.0f, 0.0f, 1.0f);
+  vec3 up;
+  if (glm::angle(normal, vec3(0.0f, 0.0f, 1.0f)) > 0.1) {
+    up = vec3(0.0f, 0.0f, 1.0f);
   } else {
-    up = glm::vec3(1.0f, 0.0f, 0.0f);
+    up = vec3(1.0f, 0.0f, 0.0f);
   }
 
-  glm::vec3 sideways = glm::cross(normal, up);
+  vec3 sideways = glm::cross(normal, up);
 
   // Front
   {
@@ -446,7 +447,7 @@ Size quadSize(int quad) {
   Vertex topLeft = quads[quad].vertices[0];
   Vertex bottomRight = quads[quad].vertices[2];
 
-  glm::vec3 diff = glm::abs(topLeft.position - bottomRight.position);
+  vec3 diff = glm::abs(topLeft.position - bottomRight.position);
   int width = 0;
   int height = 0;
 

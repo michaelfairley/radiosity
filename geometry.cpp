@@ -1,9 +1,9 @@
 
-Quad makeQuad(glm::vec3 a,
-              glm::vec3 b,
-              glm::vec3 c,
-              glm::vec3 d,
-              glm::vec3 normal,
+Quad makeQuad(vec3 a,
+              vec3 b,
+              vec3 c,
+              vec3 d,
+              vec3 normal,
               Color color) {
   Quad quad =  {{
       { a, normal, color, {0.0, 0.0} },
@@ -24,21 +24,21 @@ Quad makeWall(float x, float y, float z,
   assert(dx != 0 || dy != 0);
   assert(dz > 0);
 
-  glm::vec3 normal;
+  vec3 normal;
   if(dx > 0) {
-    normal = glm::vec3(0.0f, 1.0f, 0.0f);
+    normal = vec3(0.0f, 1.0f, 0.0f);
   } else if (dx < 0) {
-    normal = glm::vec3(0.0f, -1.0f, 0.0f);
+    normal = vec3(0.0f, -1.0f, 0.0f);
   } else if(dy > 0) {
-    normal = glm::vec3(-1.0f, 0.0f, 0.0f);
+    normal = vec3(-1.0f, 0.0f, 0.0f);
   } else if (dy < 0) {
-    normal = glm::vec3(1.0f, 0.0f, 0.0f);
+    normal = vec3(1.0f, 0.0f, 0.0f);
   }
 
-  return makeQuad(glm::vec3(x, y, z),
-                  glm::vec3(x + dx, y + dy, z),
-                  glm::vec3(x + dx, y + dy, z + dz),
-                  glm::vec3(x, y, z + dz),
+  return makeQuad(vec3(x, y, z),
+                  vec3(x + dx, y + dy, z),
+                  vec3(x + dx, y + dy, z + dz),
+                  vec3(x, y, z + dz),
                   normal,
                   color);
 }
@@ -48,11 +48,11 @@ Quad makeFloor(float x, float y,
                Color color) {
   assert(dx != 0 && dy != 0);
 
-  return makeQuad(glm::vec3(x, y, 0.0f),
-                  glm::vec3(x, y + dy, 0.0f),
-                  glm::vec3(x + dx, y + dy, 0.0f),
-                  glm::vec3(x + dx, y, 0.0f),
-                  glm::vec3(0.0f, 0.0f, 1.0f),
+  return makeQuad(vec3(x, y, 0.0f),
+                  vec3(x, y + dy, 0.0f),
+                  vec3(x + dx, y + dy, 0.0f),
+                  vec3(x + dx, y, 0.0f),
+                  vec3(0.0f, 0.0f, 1.0f),
                   color);
 }
 
@@ -61,11 +61,11 @@ Quad makeCeiling(float x, float y,
                  Color color) {
   assert(dx != 0 && dy != 0);
 
-  return makeQuad(glm::vec3(x, y + dy, 6.0f),
-                  glm::vec3(x, y, 6.0f),
-                  glm::vec3(x + dx, y, 6.0f),
-                  glm::vec3(x + dx, y + dy, 6.0f),
-                  glm::vec3(0.0f, 0.0f, -1.0f),
+  return makeQuad(vec3(x, y + dy, 6.0f),
+                  vec3(x, y, 6.0f),
+                  vec3(x + dx, y, 6.0f),
+                  vec3(x + dx, y + dy, 6.0f),
+                  vec3(0.0f, 0.0f, -1.0f),
                   BLUE);
 }
 
