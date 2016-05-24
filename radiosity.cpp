@@ -20,7 +20,7 @@
 using glm::vec3;
 
 #define HEMICUBE_RESOLUTION 200
-#define TEXEL_DENSITY 16
+#define TEXEL_DENSITY 4
 
 void tick();
 GLuint createShader(const char* name, GLenum shaderType);
@@ -86,8 +86,8 @@ const Color BLUE = {0.0f, 0.0f, 0.8f};
 
 #include "geometry.cpp"
 
-GLuint textures[ARRAY_LENGTH(quads)];
-Color *textureData[ARRAY_LENGTH(quads)];
+GLuint textures[ARRAY_LENGTH(rects)];
+Color *textureData[ARRAY_LENGTH(rects)];
 
 int main(int argc, char** argv) {
   buildMesh();
@@ -446,55 +446,22 @@ GLuint createShader(const char* filename, GLenum shaderType) {
   return shader;
 }
 
-typedef struct {
-  int width;
-  int height;
-} Size;
-
-Size quadSize(int quad) {
-  Vertex topLeft = quads[quad].vertices[0];
-  Vertex bottomRight = quads[quad].vertices[2];
-
-  vec3 diff = glm::abs(topLeft.position - bottomRight.position);
-  int width = 0;
-  int height = 0;
-
-  if (diff.y > 0.01) {
-    if (width == 0) {
-      width = diff.y * TEXEL_DENSITY;
-    } else {
-      height = diff.y * TEXEL_DENSITY;
-    }
-  }
-  if (diff.x > 0.01) {
-    if (width == 0) {
-      width = diff.x * TEXEL_DENSITY;
-    } else {
-      height = diff.x * TEXEL_DENSITY;
-    }
-  }
-  if (diff.z > 0.01) {
-    assert(height == 0);
-    height = diff.z * TEXEL_DENSITY;
-  }
-
-  Size size = {width, height};
-  return size;
-}
-
 void generateTextures() {
   glGenTextures(ARRAY_LENGTH(textures), textures);
   for (int i = 0; i < ARRAY_LENGTH(textures); i++) {
-    Size size = quadSize(i);
-    int width = size.width;
-    int height = size.height;
+    int width = glm::length(rects[i].da) * TEXEL_DENSITY;
+    int height = glm::length(rects[i].db) * TEXEL_DENSITY;
 
     textureData[i] = (Color*) malloc(sizeof(Color) * width * height * TEXEL_DENSITY * TEXEL_DENSITY);
 
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         Color black = {0.0f, 0.0f, 0.0f};
-        textureData[i][y*width + x] = black;
+        if ((x+y) % 2) {
+          textureData[i][y*width + x] = black;
+        } else {
+          textureData[i][y*width + x] = rects[i].color;
+        }
       }
     }
 
