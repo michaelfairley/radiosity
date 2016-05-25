@@ -1,7 +1,9 @@
 multiplier map
 optimize
+make sure hemicube doesn't poke through geometry
 material properties
 HDR
 rect packing
 lightmap only
+better scene
 cleanup
