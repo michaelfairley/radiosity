@@ -20,6 +20,17 @@
 using glm::vec3;
 
 #define HEMICUBE_RESOLUTION 200
+const int TOP_X = HEMICUBE_RESOLUTION/2;
+const int TOP_Y = 0;
+const int BOTTOM_X = HEMICUBE_RESOLUTION/2;
+const int BOTTOM_Y = HEMICUBE_RESOLUTION*3/2;
+const int LEFT_X = 0;
+const int LEFT_Y = HEMICUBE_RESOLUTION/2;
+const int RIGHT_X = HEMICUBE_RESOLUTION*3/2;
+const int RIGHT_Y = HEMICUBE_RESOLUTION/2;
+const int FRONT_X = HEMICUBE_RESOLUTION/2;
+const int FRONT_Y = HEMICUBE_RESOLUTION/2;
+
 #define TEXEL_DENSITY 4
 
 void radiosify();
@@ -377,7 +388,7 @@ void renderHemicube(vec3 location, vec3 normal) {
 
   // Front
   {
-    glViewport(HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
+    glViewport(FRONT_X, FRONT_Y, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
     glm::mat4 camera = glm::lookAt(location, location + normal, up);
     render(camera, program);
   }
@@ -387,32 +398,32 @@ void renderHemicube(vec3 location, vec3 normal) {
 
     // Right
     {
-      glViewport(HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
-      glScissor(HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION);
+      glViewport(RIGHT_X, RIGHT_Y, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
+      glScissor(RIGHT_X, RIGHT_Y, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION);
       glm::mat4 camera = glm::lookAt(location, location + sideways, up);
       render(camera, program);
     }
 
     // Left
     {
-      glScissor(0, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION);
-      glViewport(-HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
+      glScissor(LEFT_X, LEFT_Y, HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION);
+      glViewport(LEFT_X - HEMICUBE_RESOLUTION/2, LEFT_Y, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
       glm::mat4 camera = glm::lookAt(location, location - sideways, up);
       render(camera, program);
     }
 
     // Down
     {
-      glViewport(HEMICUBE_RESOLUTION/2, -HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
-      glScissor(HEMICUBE_RESOLUTION/2, 0, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION/2);
+      glViewport(TOP_X, TOP_Y - HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
+      glScissor(TOP_X, TOP_Y, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION/2);
       glm::mat4 camera = glm::lookAt(location, location - up, normal);
       render(camera, program);
     }
 
     // Up
     {
-      glViewport(HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
-      glScissor(HEMICUBE_RESOLUTION/2, HEMICUBE_RESOLUTION*3/2, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION/2);
+      glViewport(BOTTOM_X, BOTTOM_Y, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION);
+      glScissor(BOTTOM_X, BOTTOM_Y, HEMICUBE_RESOLUTION, HEMICUBE_RESOLUTION/2);
       glm::mat4 camera = glm::lookAt(location, location + up, -normal);
       render(camera, program);
     }
@@ -438,8 +449,8 @@ Color hemicubeAverage() {
   float g = 0.0f;
   float b = 0.0f;
 
-  for (int y = 0; y < HEMICUBE_RESOLUTION/2; y++) {
-    for (int x = HEMICUBE_RESOLUTION/2; x < HEMICUBE_RESOLUTION*3/2; x++) {
+  for (int y = TOP_Y; y < TOP_Y + HEMICUBE_RESOLUTION/2; y++) {
+    for (int x = TOP_X; x < TOP_X + HEMICUBE_RESOLUTION; x++) {
       Color c = hemicubeTextureData[y][x];
       r += c.r;
       g += c.g;
@@ -447,8 +458,8 @@ Color hemicubeAverage() {
     }
   }
 
-  for (int y = HEMICUBE_RESOLUTION*3/2; y < HEMICUBE_RESOLUTION*2; y++) {
-    for (int x = HEMICUBE_RESOLUTION/2; x < HEMICUBE_RESOLUTION*3/2; x++) {
+  for (int y = BOTTOM_Y; y < BOTTOM_Y + HEMICUBE_RESOLUTION/2; y++) {
+    for (int x = BOTTOM_X; x < BOTTOM_X + HEMICUBE_RESOLUTION; x++) {
       Color c = hemicubeTextureData[y][x];
       r += c.r;
       g += c.g;
@@ -456,8 +467,8 @@ Color hemicubeAverage() {
     }
   }
 
-  for (int y = HEMICUBE_RESOLUTION/2; y < HEMICUBE_RESOLUTION*3/2; y++) {
-    for (int x = 0; x < HEMICUBE_RESOLUTION/2; x++) {
+  for (int y = LEFT_Y; y < LEFT_Y + HEMICUBE_RESOLUTION; y++) {
+    for (int x = LEFT_X; x < LEFT_X + HEMICUBE_RESOLUTION/2; x++) {
       Color c = hemicubeTextureData[y][x];
       r += c.r;
       g += c.g;
@@ -465,8 +476,8 @@ Color hemicubeAverage() {
     }
   }
 
-  for (int y = HEMICUBE_RESOLUTION/2; y < HEMICUBE_RESOLUTION*3/2; y++) {
-    for (int x = HEMICUBE_RESOLUTION*3/2; x < HEMICUBE_RESOLUTION*2; x++) {
+  for (int y = RIGHT_Y; y < RIGHT_Y + HEMICUBE_RESOLUTION; y++) {
+    for (int x = RIGHT_X; x < RIGHT_X + HEMICUBE_RESOLUTION/2; x++) {
       Color c = hemicubeTextureData[y][x];
       r += c.r;
       g += c.g;
@@ -474,8 +485,8 @@ Color hemicubeAverage() {
     }
   }
 
-  for (int y = HEMICUBE_RESOLUTION/2; y < HEMICUBE_RESOLUTION*3/2; y++) {
-    for (int x = HEMICUBE_RESOLUTION/2; x < HEMICUBE_RESOLUTION*3/2; x++) {
+  for (int y = FRONT_Y; y < FRONT_Y + HEMICUBE_RESOLUTION; y++) {
+    for (int x = FRONT_X; x < FRONT_X + HEMICUBE_RESOLUTION; x++) {
       Color c = hemicubeTextureData[y][x];
       r += c.r;
       g += c.g;
