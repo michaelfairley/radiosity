@@ -494,7 +494,7 @@ Color hemicubeAverage() {
     }
   }
 
-  int numPixels = HEMICUBE_RESOLUTION * HEMICUBE_RESOLUTION * 3 / 3;
+  int numPixels = HEMICUBE_RESOLUTION * HEMICUBE_RESOLUTION * 3;
 
   Color color = {r / numPixels, g / numPixels, b / numPixels};
   return color;
