@@ -20,6 +20,9 @@
 using glm::vec3;
 
 #define HEMICUBE_RESOLUTION 50
+const int HEMICUBE_TEXTURE_WIDTH = HEMICUBE_RESOLUTION*2;
+const int HEMICUBE_TEXTURE_HEIGHT = HEMICUBE_RESOLUTION*2;
+
 const int TOP_X = HEMICUBE_RESOLUTION/2;
 const int TOP_Y = 0;
 const int BOTTOM_X = HEMICUBE_RESOLUTION/2;
@@ -371,7 +374,7 @@ void hemicubeSetup() {
   glGenTextures(1, &hemicubeColorBuffer);
   glBindTexture(GL_TEXTURE_2D, hemicubeColorBuffer);
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, HEMICUBE_RESOLUTION*2, HEMICUBE_RESOLUTION*2, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, HEMICUBE_TEXTURE_WIDTH, HEMICUBE_TEXTURE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -381,7 +384,7 @@ void hemicubeSetup() {
 
   glGenRenderbuffers(1, &hemicubeDepthBuffer);
   glBindRenderbuffer(GL_RENDERBUFFER, hemicubeDepthBuffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, HEMICUBE_RESOLUTION*2, HEMICUBE_RESOLUTION*2);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, HEMICUBE_TEXTURE_WIDTH, HEMICUBE_TEXTURE_HEIGHT);
 
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, hemicubeDepthBuffer);
   // glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -463,8 +466,8 @@ void renderHemicube(vec3 location, vec3 normal) {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-Color hemicubeTextureData[HEMICUBE_RESOLUTION * 2][HEMICUBE_RESOLUTION * 2];
-float multiplierMap[HEMICUBE_RESOLUTION * 2][HEMICUBE_RESOLUTION * 2];
+Color hemicubeTextureData[HEMICUBE_TEXTURE_WIDTH][HEMICUBE_TEXTURE_HEIGHT];
+float multiplierMap[HEMICUBE_TEXTURE_WIDTH][HEMICUBE_TEXTURE_HEIGHT];
 
 float cosine(vec3 a, vec3 b) {
   return glm::dot(a, b) / glm::length(a) / glm::length(b);
@@ -514,13 +517,13 @@ void prepareMultiplierMap() {
   }
 
   float total = 0.0f;
-  for (int y = 0; y < HEMICUBE_RESOLUTION*2; y++) {
-    for (int x = 0; x < HEMICUBE_RESOLUTION*2; x++) {
+  for (int y = 0; y < HEMICUBE_TEXTURE_HEIGHT; y++) {
+    for (int x = 0; x < HEMICUBE_TEXTURE_WIDTH; x++) {
       total += multiplierMap[y][x];
     }
   }
-  for (int y = 0; y < HEMICUBE_RESOLUTION*2; y++) {
-    for (int x = 0; x < HEMICUBE_RESOLUTION*2; x++) {
+  for (int y = 0; y < HEMICUBE_TEXTURE_HEIGHT; y++) {
+    for (int x = 0; x < HEMICUBE_TEXTURE_WIDTH; x++) {
       multiplierMap[y][x] /= total;
     }
   }
@@ -530,7 +533,7 @@ void prepareMultiplierMap() {
   glGenTextures(1, &multiplierMapTexture);
 
   glBindTexture(GL_TEXTURE_2D, multiplierMapTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, HEMICUBE_RESOLUTION*2, HEMICUBE_RESOLUTION*2, 0, GL_RED, GL_FLOAT, multiplierMap);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, HEMICUBE_TEXTURE_WIDTH, HEMICUBE_TEXTURE_HEIGHT, 0, GL_RED, GL_FLOAT, multiplierMap);
   glBindTexture(GL_TEXTURE_2D, 0);
 #endif
 }
@@ -539,7 +542,7 @@ Color hemicubeAverage() {
   glBindFramebuffer(GL_FRAMEBUFFER, hemicubeFrameBuffer);
 
   glReadPixels(0, 0,
-               HEMICUBE_RESOLUTION * 2, HEMICUBE_RESOLUTION * 2,
+               HEMICUBE_TEXTURE_WIDTH, HEMICUBE_TEXTURE_HEIGHT,
                GL_RGB, GL_FLOAT,
                hemicubeTextureData);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
