@@ -32,7 +32,7 @@ const int FRONT_X = HEMICUBE_RESOLUTION/2;
 const int FRONT_Y = HEMICUBE_RESOLUTION/2;
 
 #define TEXEL_DENSITY 4
-#define PASSES 4
+#define PASSES 8
 
 void radiosify();
 void hemicubeSetup();
@@ -123,6 +123,8 @@ Color *textureData[ARRAY_LENGTH(rects)];
 Color hemicubeAverage();
 
 int main(int argc, char** argv) {
+  setbuf(stdout, NULL);
+
   buildMesh();
 
   if (SDL_Init(SDL_INIT_VIDEO) < 0) fail;
@@ -246,7 +248,7 @@ int main(int argc, char** argv) {
   glCullFace(GL_BACK);
 
   for (int i = 0; i < PASSES; i++) {
-    printf("Pass %d\n", i);
+    printf("Pass %d\n", i+1);
     radiosify();
     loadTextures();
   }
@@ -650,8 +652,9 @@ void loadTextures() {
 }
 
 void radiosify() {
+  float error = 0.0f;
   for (int i = 0; i < ARRAY_LENGTH(rects); i++) {
-    printf("Rect %d\n", i);
+    printf("Rect %d\r", i);
     Rect rect = rects[i];
     Color* texture = textureData[i];
 
@@ -671,8 +674,14 @@ void radiosify() {
         Color result = {avg.r * rect.color.r,
                         avg.g * rect.color.g,
                         avg.b * rect.color.b};
+        error += fabs(texture[y*width + x].r - result.r)
+          + fabs(texture[y*width + x].g - result.g)
+          + fabs(texture[y*width + x].b - result.b);
         texture[y*width + x] = result;
       }
     }
   }
+
+  printf("\n");
+  printf("Error: %f\n", error);
 }
