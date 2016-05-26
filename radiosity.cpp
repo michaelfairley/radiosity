@@ -71,6 +71,23 @@ struct Color {
   float r;
   float g;
   float b;
+
+  Color& operator+=(const Color& other) {
+    this->r += other.r;
+    this->g += other.g;
+    this->b += other.b;
+    return *this;
+  }
+
+  Color operator+(const Color& other) {
+    Color result = {r + other.r, g + other.g, b + other.b};
+    return result;
+  }
+
+  Color operator*(float scale) {
+    Color result = {r * scale, g * scale, b * scale};
+    return result;
+  }
 };
 
 struct Material {
@@ -518,57 +535,39 @@ Color hemicubeAverage() {
                hemicubeTextureData);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  float r = 0.0f;
-  float g = 0.0f;
-  float b = 0.0f;
+  Color result = {0.0f, 0.0f, 0.0f};
 
   for (int y = TOP_Y; y < TOP_Y + HEMICUBE_RESOLUTION/2; y++) {
     for (int x = TOP_X; x < TOP_X + HEMICUBE_RESOLUTION; x++) {
-      Color c = hemicubeTextureData[y][x];
-      r += c.r * multiplierMap[y][x];
-      g += c.g * multiplierMap[y][x];
-      b += c.b * multiplierMap[y][x];
+      result += hemicubeTextureData[y][x] * multiplierMap[y][x];
     }
   }
 
   for (int y = BOTTOM_Y; y < BOTTOM_Y + HEMICUBE_RESOLUTION/2; y++) {
     for (int x = BOTTOM_X; x < BOTTOM_X + HEMICUBE_RESOLUTION; x++) {
-      Color c = hemicubeTextureData[y][x];
-      r += c.r * multiplierMap[y][x];
-      g += c.g * multiplierMap[y][x];
-      b += c.b * multiplierMap[y][x];
+      result += hemicubeTextureData[y][x] * multiplierMap[y][x];
     }
   }
 
   for (int y = LEFT_Y; y < LEFT_Y + HEMICUBE_RESOLUTION; y++) {
     for (int x = LEFT_X; x < LEFT_X + HEMICUBE_RESOLUTION/2; x++) {
-      Color c = hemicubeTextureData[y][x];
-      r += c.r * multiplierMap[y][x];
-      g += c.g * multiplierMap[y][x];
-      b += c.b * multiplierMap[y][x];
+      result += hemicubeTextureData[y][x] * multiplierMap[y][x];
     }
   }
 
   for (int y = RIGHT_Y; y < RIGHT_Y + HEMICUBE_RESOLUTION; y++) {
     for (int x = RIGHT_X; x < RIGHT_X + HEMICUBE_RESOLUTION/2; x++) {
-      Color c = hemicubeTextureData[y][x];
-      r += c.r * multiplierMap[y][x];
-      g += c.g * multiplierMap[y][x];
-      b += c.b * multiplierMap[y][x];
+      result += hemicubeTextureData[y][x] * multiplierMap[y][x];
     }
   }
 
   for (int y = FRONT_Y; y < FRONT_Y + HEMICUBE_RESOLUTION; y++) {
     for (int x = FRONT_X; x < FRONT_X + HEMICUBE_RESOLUTION; x++) {
-      Color c = hemicubeTextureData[y][x];
-      r += c.r * multiplierMap[y][x];
-      g += c.g * multiplierMap[y][x];
-      b += c.b * multiplierMap[y][x];
+      result += hemicubeTextureData[y][x] * multiplierMap[y][x];
     }
   }
 
-  Color color = {r, g, b};
-  return color;
+  return result;
 }
 
 GLuint createShader(const char* filename, GLenum shaderType) {
