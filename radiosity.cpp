@@ -19,7 +19,7 @@
 
 using glm::vec3;
 
-#define HEMICUBE_RESOLUTION 200
+#define HEMICUBE_RESOLUTION 50
 const int TOP_X = HEMICUBE_RESOLUTION/2;
 const int TOP_Y = 0;
 const int BOTTOM_X = HEMICUBE_RESOLUTION/2;
@@ -32,6 +32,7 @@ const int FRONT_X = HEMICUBE_RESOLUTION/2;
 const int FRONT_Y = HEMICUBE_RESOLUTION/2;
 
 #define TEXEL_DENSITY 4
+#define PASSES 4
 
 void radiosify();
 void hemicubeSetup();
@@ -42,6 +43,7 @@ void render(glm::mat4 camera, GLuint program);
 void renderHemicube(vec3 location, vec3 normal);
 void setDisplaySize(int width, int height);
 void generateTextures();
+void prepareMultiplierMap();
 
 bool quit = false;
 
@@ -94,9 +96,7 @@ struct Quad {
 };
 
 const Color WHITE = {0.85f, 0.85f, 0.85f};
-const Color MAGENTA = {0.8f, 0.0f, 0.8f};
 const Color RED = {0.8f, 0.0f, 0.0f};
-const Color BLUE = {0.0f, 0.0f, 0.8f};
 
 #include "geometry.cpp"
 
@@ -123,6 +123,8 @@ int main(int argc, char** argv) {
   SDL_GL_SetSwapInterval(1);
 
   SDL_SetRelativeMouseMode(SDL_TRUE);
+
+  prepareMultiplierMap();
 
 
   programs[0] = glCreateProgram();
@@ -223,7 +225,8 @@ int main(int argc, char** argv) {
   glFrontFace(GL_CW);
   glCullFace(GL_BACK);
 
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < PASSES; i++) {
+    printf("Pass %d\n", i);
     radiosify();
     loadTextures();
   }
@@ -435,6 +438,76 @@ void renderHemicube(vec3 location, vec3 normal) {
 }
 
 Color hemicubeTextureData[HEMICUBE_RESOLUTION * 2][HEMICUBE_RESOLUTION * 2];
+float multiplierMap[HEMICUBE_RESOLUTION * 2][HEMICUBE_RESOLUTION * 2];
+
+float cosine(vec3 a, vec3 b) {
+  return glm::dot(a, b) / glm::length(a) / glm::length(b);
+}
+
+void prepareMultiplierMap() {
+  vec3 surfaceNormal = vec3(0.0, HEMICUBE_RESOLUTION/2, 0.0f);
+
+  vec3 faceNormal = vec3(0.0f, 0.0f, HEMICUBE_RESOLUTION/2);
+  for (int y = TOP_Y; y < TOP_Y + HEMICUBE_RESOLUTION/2; y++) {
+    for (int x = TOP_X; x < TOP_X + HEMICUBE_RESOLUTION; x++) {
+      vec3 loc = vec3(TOP_X + HEMICUBE_RESOLUTION/2 - x, y - TOP_Y, HEMICUBE_RESOLUTION/2);
+      multiplierMap[y][x] = cosine(faceNormal, loc) * cosine(surfaceNormal, loc);
+    }
+  }
+
+  faceNormal = vec3(0.0f, 0.0f, -HEMICUBE_RESOLUTION/2);
+  for (int y = BOTTOM_Y; y < BOTTOM_Y + HEMICUBE_RESOLUTION/2; y++) {
+    for (int x = BOTTOM_X; x < BOTTOM_X + HEMICUBE_RESOLUTION; x++) {
+      vec3 loc = vec3(BOTTOM_X + HEMICUBE_RESOLUTION/2 - x, BOTTOM_Y + HEMICUBE_RESOLUTION/2 - y, -HEMICUBE_RESOLUTION/2);
+      multiplierMap[y][x] = cosine(faceNormal, loc) * cosine(surfaceNormal, loc);
+    }
+  }
+
+  faceNormal = vec3(-HEMICUBE_RESOLUTION/2, 0.0f, 0.0f);
+  for (int y = LEFT_Y; y < LEFT_Y + HEMICUBE_RESOLUTION; y++) {
+    for (int x = LEFT_X; x < LEFT_X + HEMICUBE_RESOLUTION/2; x++) {
+      vec3 loc = vec3(-HEMICUBE_RESOLUTION/2, x - LEFT_X, LEFT_Y + HEMICUBE_RESOLUTION/2 - y);
+      multiplierMap[y][x] = cosine(faceNormal, loc) * cosine(surfaceNormal, loc);
+    }
+  }
+
+  faceNormal = vec3(HEMICUBE_RESOLUTION/2, 0.0f, 0.0f);
+  for (int y = RIGHT_Y; y < RIGHT_Y + HEMICUBE_RESOLUTION; y++) {
+    for (int x = RIGHT_X; x < RIGHT_X + HEMICUBE_RESOLUTION/2; x++) {
+      vec3 loc = vec3(HEMICUBE_RESOLUTION/2, RIGHT_X + HEMICUBE_RESOLUTION/2 - x, RIGHT_Y + HEMICUBE_RESOLUTION/2 - y);
+      multiplierMap[y][x] = cosine(faceNormal, loc) * cosine(surfaceNormal, loc);
+    }
+  }
+
+  faceNormal = vec3(0.0f, HEMICUBE_RESOLUTION/2, 0.0f);
+  for (int y = FRONT_Y; y < FRONT_Y + HEMICUBE_RESOLUTION; y++) {
+    for (int x = FRONT_X; x < FRONT_X + HEMICUBE_RESOLUTION; x++) {
+      vec3 loc = vec3(FRONT_X + HEMICUBE_RESOLUTION/2 - x, HEMICUBE_RESOLUTION/2, FRONT_Y + HEMICUBE_RESOLUTION/2 - y);
+      multiplierMap[y][x] = cosine(faceNormal, loc) * cosine(surfaceNormal, loc);
+    }
+  }
+
+  float total = 0.0f;
+  for (int y = 0; y < HEMICUBE_RESOLUTION*2; y++) {
+    for (int x = 0; x < HEMICUBE_RESOLUTION*2; x++) {
+      total += multiplierMap[y][x];
+    }
+  }
+  for (int y = 0; y < HEMICUBE_RESOLUTION*2; y++) {
+    for (int x = 0; x < HEMICUBE_RESOLUTION*2; x++) {
+      multiplierMap[y][x] /= total;
+    }
+  }
+
+#if 0
+  GLuint multiplierMapTexture;
+  glGenTextures(1, &multiplierMapTexture);
+
+  glBindTexture(GL_TEXTURE_2D, multiplierMapTexture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, HEMICUBE_RESOLUTION*2, HEMICUBE_RESOLUTION*2, 0, GL_RED, GL_FLOAT, multiplierMap);
+  glBindTexture(GL_TEXTURE_2D, 0);
+#endif
+}
 
 Color hemicubeAverage() {
   glBindFramebuffer(GL_FRAMEBUFFER, hemicubeFrameBuffer);
@@ -452,51 +525,49 @@ Color hemicubeAverage() {
   for (int y = TOP_Y; y < TOP_Y + HEMICUBE_RESOLUTION/2; y++) {
     for (int x = TOP_X; x < TOP_X + HEMICUBE_RESOLUTION; x++) {
       Color c = hemicubeTextureData[y][x];
-      r += c.r;
-      g += c.g;
-      b += c.b;
+      r += c.r * multiplierMap[y][x];
+      g += c.g * multiplierMap[y][x];
+      b += c.b * multiplierMap[y][x];
     }
   }
 
   for (int y = BOTTOM_Y; y < BOTTOM_Y + HEMICUBE_RESOLUTION/2; y++) {
     for (int x = BOTTOM_X; x < BOTTOM_X + HEMICUBE_RESOLUTION; x++) {
       Color c = hemicubeTextureData[y][x];
-      r += c.r;
-      g += c.g;
-      b += c.b;
+      r += c.r * multiplierMap[y][x];
+      g += c.g * multiplierMap[y][x];
+      b += c.b * multiplierMap[y][x];
     }
   }
 
   for (int y = LEFT_Y; y < LEFT_Y + HEMICUBE_RESOLUTION; y++) {
     for (int x = LEFT_X; x < LEFT_X + HEMICUBE_RESOLUTION/2; x++) {
       Color c = hemicubeTextureData[y][x];
-      r += c.r;
-      g += c.g;
-      b += c.b;
+      r += c.r * multiplierMap[y][x];
+      g += c.g * multiplierMap[y][x];
+      b += c.b * multiplierMap[y][x];
     }
   }
 
   for (int y = RIGHT_Y; y < RIGHT_Y + HEMICUBE_RESOLUTION; y++) {
     for (int x = RIGHT_X; x < RIGHT_X + HEMICUBE_RESOLUTION/2; x++) {
       Color c = hemicubeTextureData[y][x];
-      r += c.r;
-      g += c.g;
-      b += c.b;
+      r += c.r * multiplierMap[y][x];
+      g += c.g * multiplierMap[y][x];
+      b += c.b * multiplierMap[y][x];
     }
   }
 
   for (int y = FRONT_Y; y < FRONT_Y + HEMICUBE_RESOLUTION; y++) {
     for (int x = FRONT_X; x < FRONT_X + HEMICUBE_RESOLUTION; x++) {
       Color c = hemicubeTextureData[y][x];
-      r += c.r;
-      g += c.g;
-      b += c.b;
+      r += c.r * multiplierMap[y][x];
+      g += c.g * multiplierMap[y][x];
+      b += c.b * multiplierMap[y][x];
     }
   }
 
-  int numPixels = HEMICUBE_RESOLUTION * HEMICUBE_RESOLUTION * 3;
-
-  Color color = {r / numPixels, g / numPixels, b / numPixels};
+  Color color = {r, g, b};
   return color;
 }
 
@@ -595,7 +666,6 @@ void radiosify() {
                         avg.g * rect.color.g,
                         avg.b * rect.color.b};
         texture[y*width + x] = result;
-
       }
     }
   }
