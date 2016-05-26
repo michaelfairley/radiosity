@@ -20,19 +20,19 @@
 using glm::vec3;
 
 #define HEMICUBE_RESOLUTION 50
-const int HEMICUBE_TEXTURE_WIDTH = HEMICUBE_RESOLUTION*2;
-const int HEMICUBE_TEXTURE_HEIGHT = HEMICUBE_RESOLUTION*2;
+const int HEMICUBE_TEXTURE_WIDTH = HEMICUBE_RESOLUTION;
+const int HEMICUBE_TEXTURE_HEIGHT = HEMICUBE_RESOLUTION*3;
 
-const int TOP_X = HEMICUBE_RESOLUTION/2;
+const int TOP_X = 0;
 const int TOP_Y = 0;
-const int BOTTOM_X = HEMICUBE_RESOLUTION/2;
-const int BOTTOM_Y = HEMICUBE_RESOLUTION*3/2;
+const int BOTTOM_X = 0;
+const int BOTTOM_Y = HEMICUBE_RESOLUTION/2;
 const int LEFT_X = 0;
-const int LEFT_Y = HEMICUBE_RESOLUTION/2;
-const int RIGHT_X = HEMICUBE_RESOLUTION*3/2;
-const int RIGHT_Y = HEMICUBE_RESOLUTION/2;
-const int FRONT_X = HEMICUBE_RESOLUTION/2;
-const int FRONT_Y = HEMICUBE_RESOLUTION/2;
+const int LEFT_Y = HEMICUBE_RESOLUTION;
+const int RIGHT_X = HEMICUBE_RESOLUTION/2;
+const int RIGHT_Y = HEMICUBE_RESOLUTION;
+const int FRONT_X = 0;
+const int FRONT_Y = HEMICUBE_RESOLUTION*2;
 
 #define TEXEL_DENSITY 4
 #define PASSES 8
@@ -466,8 +466,8 @@ void renderHemicube(vec3 location, vec3 normal) {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-Color hemicubeTextureData[HEMICUBE_TEXTURE_WIDTH][HEMICUBE_TEXTURE_HEIGHT];
-float multiplierMap[HEMICUBE_TEXTURE_WIDTH][HEMICUBE_TEXTURE_HEIGHT];
+Color hemicubeTextureData[HEMICUBE_TEXTURE_HEIGHT][HEMICUBE_TEXTURE_WIDTH];
+float multiplierMap[HEMICUBE_TEXTURE_HEIGHT][HEMICUBE_TEXTURE_WIDTH];
 
 float cosine(vec3 a, vec3 b) {
   return glm::dot(a, b) / glm::length(a) / glm::length(b);
