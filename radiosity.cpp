@@ -117,6 +117,8 @@ struct Quad {
 
 const Color WHITE = {0.85f, 0.85f, 0.85f};
 const Color RED = {0.8f, 0.0f, 0.0f};
+const Color BLACK = {0.0f, 0.0f, 0.0f};
+const Color SUN = {1000.0f, 850.0f, 900.0f};
 
 #include "geometry.cpp"
 
@@ -341,7 +343,7 @@ void tick() {
 }
 
 void render(glm::mat4 camera, GLuint program) {
-  glClearColor(1.0, 1.0, 1.0, 1.0);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClearDepth(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -374,7 +376,7 @@ void hemicubeSetup() {
   glGenTextures(1, &hemicubeColorBuffer);
   glBindTexture(GL_TEXTURE_2D, hemicubeColorBuffer);
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, HEMICUBE_TEXTURE_WIDTH, HEMICUBE_TEXTURE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, HEMICUBE_TEXTURE_WIDTH, HEMICUBE_TEXTURE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -627,10 +629,16 @@ void generateTextures() {
 
     textureData[i] = (Color*) malloc(sizeof(Color) * width * height * TEXEL_DENSITY * TEXEL_DENSITY);
 
+    Color color;
+    if (i == 0) {
+      color = SUN;
+    } else {
+      color = BLACK;
+    }
+
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
-        Color black = {0.0f, 0.0f, 0.0f};
-        textureData[i][y*width + x] = black;
+        textureData[i][y*width + x] = color;
       }
     }
   }
@@ -685,6 +693,9 @@ void radiosify() {
         Color result = {avg.r * rect.color.r,
                         avg.g * rect.color.g,
                         avg.b * rect.color.b};
+        if (i == 0) {
+          result += SUN;
+        }
         error += fabs(texture[y*width + x].r - result.r)
           + fabs(texture[y*width + x].g - result.g)
           + fabs(texture[y*width + x].b - result.b);

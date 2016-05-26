@@ -57,6 +57,12 @@ Quad makeQuad(Rect rect) {
 }
 
 Rect rects[] = {
+  // Sun
+  {vec3(3.0f, 0.0f, 5.0f),
+   vec3(2.0f, 0.0f, 0.0f),
+   vec3(0.0f, 0.0f, 2.0f),
+   SUN},
+
   // Left column
   {vec3(9.0f, 17.0f, 0.0f),
    vec3(1.0f, 0.0f, 0.0f),
@@ -262,7 +268,6 @@ Rect rects[] = {
   makeCeiling(5.0f, 19.0f,
               15.0f, 3.0f,
               WHITE)
-
 };
 
 Quad quads[ARRAY_LENGTH(rects)];
