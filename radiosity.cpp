@@ -380,16 +380,16 @@ void hemicubeSetup() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hemicubeColorBuffer, 0);
-  // glBindTexture(GL_TEXTURE_2D, 0);
+  glBindTexture(GL_TEXTURE_2D, 0);
 
   glGenRenderbuffers(1, &hemicubeDepthBuffer);
   glBindRenderbuffer(GL_RENDERBUFFER, hemicubeDepthBuffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, HEMICUBE_TEXTURE_WIDTH, HEMICUBE_TEXTURE_HEIGHT);
 
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, hemicubeDepthBuffer);
-  // glBindRenderbuffer(GL_RENDERBUFFER, 0);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-  // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void renderHemicube(vec3 location, vec3 normal) {
