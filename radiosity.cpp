@@ -37,6 +37,8 @@ const int FRONT_Y = HEMICUBE_RESOLUTION*2;
 #define TEXEL_DENSITY 4
 #define PASSES 8
 
+void setWindowSize();
+void renderScene();
 void radiosify();
 void hemicubeSetup();
 void loadTextures();
@@ -256,25 +258,11 @@ int main(int argc, char** argv) {
     printf("Pass %d\n", i+1);
     radiosify();
     loadTextures();
+    setWindowSize();
+    renderScene();
   }
 
-  {
-    int width;
-    int height;
-    SDL_GetWindowSize(window, &width, &height);
-
-    for (int i = 0; i < ARRAY_LENGTH(programs); i++) {
-      glUseProgram(programs[i]);
-      {
-        GLint projLoc = glGetUniformLocation(programs[i], "proj");
-        glm::mat4 proj = glm::perspective((float) M_PI/3, (float) width / (float) height, 0.1f, 100.0f);
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-      }
-    }
-    glUseProgram(0);
-
-    glViewport(0, 0, width, height);
-  }
+  setWindowSize();
 
   while (!quit) {
     tick();
@@ -326,7 +314,29 @@ void tick() {
       cameraPosition -= glm::rotateZ(vec3(MOVE_SPEED, 0.0f, 0.0f), -cameraRotateZ);
     }
   }
+}
 
+void setWindowSize() {
+  {
+    int width;
+    int height;
+    SDL_GetWindowSize(window, &width, &height);
+
+    for (int i = 0; i < ARRAY_LENGTH(programs); i++) {
+      glUseProgram(programs[i]);
+      {
+        GLint projLoc = glGetUniformLocation(programs[i], "proj");
+        glm::mat4 proj = glm::perspective((float) M_PI/3, (float) width / (float) height, 0.1f, 100.0f);
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+      }
+    }
+    glUseProgram(0);
+
+    glViewport(0, 0, width, height);
+  }
+}
+
+void renderScene() {
   {
     glm::mat4 cameraReorient = glm::lookAt(vec3(0.0f, 0.0f, 0.0f),
                                            vec3(0.0f, 1.0f, 0.0f),
@@ -669,7 +679,9 @@ void radiosify() {
       SDL_Event event;
 
       while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) exit(1);
+        if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
+          exit(1);
+        }
       }
     }
 
