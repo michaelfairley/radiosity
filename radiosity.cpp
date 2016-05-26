@@ -392,10 +392,14 @@ void renderHemicube(vec3 location, vec3 normal) {
 
   glBindFramebuffer(GL_FRAMEBUFFER, hemicubeFrameBuffer);
 
+  float nearPlane = 0.05f;
+
+  assert(nearPlane < 0.5f / TEXEL_DENSITY);
+
   {
     glUseProgram(program);
     GLint projLoc = glGetUniformLocation(program, "proj");
-    glm::mat4 proj = glm::perspective((float) M_PI_2, 1.0f, 0.1f, 100.0f);
+    glm::mat4 proj = glm::perspective((float) M_PI_2, 1.0f, nearPlane, 100.0f);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
     glUseProgram(0);
   }
