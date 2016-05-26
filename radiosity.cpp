@@ -657,6 +657,14 @@ void loadTextures() {
 void radiosify() {
   float error = 0.0f;
   for (int i = 0; i < ARRAY_LENGTH(rects); i++) {
+    {
+      SDL_Event event;
+
+      while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_QUIT) exit(1);
+      }
+    }
+
     printf("Rect %d\r", i);
     Rect rect = rects[i];
     Color* texture = textureData[i];
